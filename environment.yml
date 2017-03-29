@@ -1,0 +1,4 @@
+name: clinvocdev
+dependencies:
+    - python=2.7.12
+    - nose
