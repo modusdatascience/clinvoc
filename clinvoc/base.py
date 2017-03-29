@@ -36,26 +36,20 @@ def create_fnmatch_wildcard_matcher(codes, name=None):
 
 class Vocabulary(object):
     @abstractmethod
-    def parse(self, expression, delimiter=',', range_delimiter='-'):
-        # First remove all white space
-        whitespace = re.compile(r'\s+')
-        expression = re.sub(whitespace, '', expression)
+    def parse(self, expression, delimiter=',;\s', range_delimiter='-'):
+        delimiter_pattern = re.compile('[^%s]+' % delimiter)
         range_delimiter_pattern = re.compile(range_delimiter)
         
-        # Replace any quotes with standardized single quotes
-        expression = expression.replace('"', '\'')
-        expression = expression.replace('’', '\'')
-        expression = expression.replace('‘', '\'')
-        
-        # Remove all quotes
-        expression = expression.replace('\'', '')
-        
         # Break into parts by delimiter
-        parts = re.split("'?%s'?" % delimiter, expression)
+        parts = delimiter_pattern.findall(expression)
         
         # Now look for any ranges or wild cards
         codes = set()
-        for part in parts:
+        for raw_part in parts:
+            # Remove quotes
+            part = raw_part.replace('\'', '').replace('"', '').replace('’', '').replace('‘', '')
+            
+            # Handle ranges and patterns
             if range_delimiter_pattern.search(part):
                 raw_start, raw_end = re.split("'?%s'?" % range_delimiter, part)
                 starts = self.match_pattern(raw_start)
