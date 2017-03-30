@@ -4,11 +4,11 @@ from abc import abstractmethod
 import fnmatch
 import re
 
-def left_pad(code, expected_length):
+def left_pad(code, expected_length, padding='0'):
     n = len(code)
     if n > expected_length:
         raise ValueError
-    return ('0' * (expected_length - n)) + code
+    return (padding * (expected_length - n)) + code
 
 def index(a, x):
     'Locate the leftmost value exactly equal to x'
