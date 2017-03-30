@@ -3,7 +3,7 @@ from nose.tools import assert_equal  # @UnresolvedImport
 from clinvoc.icd10 import ICD10CM, ICD10PCS
 from clinvoc.icd9 import ICD9CM, ICD9PCS
 from clinvoc.ubrev import UBREV
-from clinvoc.hcpcs import HCPCS
+from clinvoc.hcpcs import HCPCS, HCPCSModifier
 
 def test_icd10_cm():
     vocab = ICD10CM()
@@ -62,6 +62,10 @@ def test_hcpcs():
                  {'99377', '99378', 'G0182', 'G9473', 'G9474'})
     assert_equal(vocab.parse("'99377 -  99378', 'G0182', 'G9473      -G9474'"),
                  {'99377', '99378', 'G0182', 'G9473', 'G9474'})
+
+def test_hcpcs_modifier():
+    vocab = HCPCSModifier()
+    assert_equal(vocab.parse('G6, G7'), {'G6', 'G7'})
 
 if __name__ == '__main__':
     import sys
