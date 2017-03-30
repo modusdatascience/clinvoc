@@ -4,6 +4,7 @@ from clinvoc.icd10 import ICD10CM, ICD10PCS
 from clinvoc.icd9 import ICD9CM, ICD9PCS
 from clinvoc.ubrev import UBREV
 from clinvoc.hcpcs import HCPCS, HCPCSModifier
+from clinvoc.ndc import NDC
 
 def test_icd10_cm():
     vocab = ICD10CM()
@@ -66,6 +67,10 @@ def test_hcpcs():
 def test_hcpcs_modifier():
     vocab = HCPCSModifier()
     assert_equal(vocab.parse('G6, G7'), {'G6', 'G7'})
+
+def test_ndc():
+    vocab = NDC()
+    assert_equal(vocab.parse('1, 91201792718'), {'00000000001', '91201792718'})
 
 if __name__ == '__main__':
     import sys
