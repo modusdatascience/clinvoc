@@ -40,8 +40,12 @@ class Vocabulary(object):
         delimiter_pattern = re.compile('[^%s]+' % delimiter)
         range_delimiter_pattern = re.compile(range_delimiter)
         
+        # Remove any whitespace around range delimiters
+        delimiter_range_delimiter_reduction_pattern = re.compile('\s*%s\s*' % range_delimiter)
+        reduced_expression = delimiter_range_delimiter_reduction_pattern.sub(range_delimiter, expression)
+        
         # Break into parts by delimiter
-        parts = delimiter_pattern.findall(expression)
+        parts = delimiter_pattern.findall(reduced_expression)
         
         # Now look for any ranges or wild cards
         codes = set()
@@ -51,7 +55,7 @@ class Vocabulary(object):
             
             # Handle ranges and patterns
             if range_delimiter_pattern.search(part):
-                raw_start, raw_end = re.split("'?%s'?" % range_delimiter, part)
+                raw_start, raw_end = re.split("'?\s*%s\s*'?" % range_delimiter, part)
                 starts = self.match_pattern(raw_start)
                 ends = self.match_pattern(raw_end)
                 for start in starts:
