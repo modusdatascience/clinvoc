@@ -1,4 +1,4 @@
-from setuptools import setup
+from setuptools import setup, find_packages
 
 setup(name='clinvoc',
       version='0.1',
@@ -6,6 +6,6 @@ setup(name='clinvoc',
       author_email='jcrudy@gmail.com',
       url='https://github.com/jcrudy/clinvoc',
       package_data={'clinvoc': ['resources/*']},
-      packages=['clinvoc'],
+      packages=find_packages(),
       requires=[]
      )
