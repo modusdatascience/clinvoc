@@ -1,7 +1,8 @@
 from setuptools import setup, find_packages
-
+import versioneer
 setup(name='clinvoc',
-      version='0.1',
+      version=versioneer.get_version(),
+      cmdclass=versioneer.get_cmdclass(),
       author='Jason Rudy',
       author_email='jcrudy@gmail.com',
       url='https://github.com/jcrudy/clinvoc',

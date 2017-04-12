@@ -1,0 +1,2 @@
+include versioneer.py
+include clinvoc/_version.py
