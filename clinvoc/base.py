@@ -57,12 +57,16 @@ class Vocabulary(object):
             if range_delimiter_pattern.search(part):
                 raw_start, raw_end = re.split("'?\s*%s\s*'?" % range_delimiter, part)
                 starts = self.match_pattern(raw_start)
+                assert starts
                 ends = self.match_pattern(raw_end)
+                assert ends
                 for start in starts:
                     for end in ends:
                         codes.update(self.fill_range(start, end))
             else:
-                codes.update(self.match_pattern(part))
+                matches = self.match_pattern(part)
+                assert matches
+                codes.update(matches)
         return codes
 #                 
 #                 
