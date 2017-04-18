@@ -5,6 +5,7 @@ from clinvoc.icd9 import ICD9CM, ICD9PCS
 from clinvoc.ubrev import UBREV
 from clinvoc.hcpcs import HCPCS, HCPCSModifier
 from clinvoc.ndc import NDC
+from clinvoc.loinc import LOINC
 
 def test_icd10_cm():
     vocab = ICD10CM()
@@ -54,6 +55,11 @@ def test_ubrev():
                  {'0116'})
     assert_equal(vocab.parse('116-118'), 
                  {'0116', '0117', '0118'})
+
+def test_loinc():
+    vocab = LOINC()
+    assert_equal(vocab.parse('10037-*->10038-8'), 
+                 {'10037-0', '10038-8'})
 
 def test_hcpcs():
     vocab = HCPCS()
