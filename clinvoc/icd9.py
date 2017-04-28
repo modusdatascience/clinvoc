@@ -19,7 +19,7 @@ class ICD9CM(RegexVocabulary, LexicographicPatternMatchVocabulary, Lexicographic
     def __init__(self):
         v_regex = 'V[\d\*]{2}((\.[\d\*]{1,2})|([\d\*]{0,2}))'
         e_regex = 'E[\d\*]{3}((\.[\d\*]{1})|([\d\*]{0,1}))'
-        n_regex = '[\d\*]{1,3}((\.[\d\*]{1,2})|([\d\*]{0,2}))'
+        n_regex = '([\d\*]{1,3}(\.[\d\*]{1,2}))|([\d\*]{3,5})'
         RegexVocabulary.__init__(self, '(%s)|(%s)|(%s)' % (v_regex, e_regex, n_regex))
         LexicographicVocabulary.__init__(self, _all_icd9_cm_codes)
         
@@ -44,11 +44,12 @@ class ICD9CM(RegexVocabulary, LexicographicPatternMatchVocabulary, Lexicographic
                     result += '.' + code_[3:]
         return result
 
-class ICD9PCS(SimpleParseVocabulary, LexicographicPatternMatchVocabulary, LexicographicRangeFillVocabulary):
+class ICD9PCS(RegexVocabulary, LexicographicPatternMatchVocabulary, LexicographicRangeFillVocabulary):
     def __init__(self):
+        RegexVocabulary.__init__(self, '([\d\*]{1,2}(\.[\d\*]{1,3}))|([\d\*]{2,5})')
         LexicographicVocabulary.__init__(self, _all_icd9_pcs_codes)
 
-    def standardize(self, code):
+    def _standardize(self, code):
         code_ = code.strip().upper()
         if '.' in code_:
             pre, post = code_.split('.')
