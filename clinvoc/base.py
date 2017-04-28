@@ -73,7 +73,10 @@ class Vocabulary(object):
         return self.filter(self.parse(expression, *args, **kwargs))
     
     def match_pattern(self, pattern):
-        return set([self.standardize(code) for code in self._match_pattern(self.standardize(pattern))])
+        if '*' in pattern:
+            return set([self.standardize(code) for code in self._match_pattern(self.standardize(pattern))])
+        else:
+            return set([self.standardize(pattern)])
     
     def strict_match_pattern(self, pattern):
         return self.filter(self.match_pattern(pattern))
@@ -170,7 +173,7 @@ class RegexVocabulary(Vocabulary):
         return set(chain(*parser.parseString(expression)))
     
     def standardize(self, code):
-        assert self.regex.match(code), '%s is not a valid code for %s' % (code, type(self).__name__)
+        assert self.regex.match(code), '%s is not a properly formatted code for %s' % (code, type(self).__name__)
         return self._standardize(code)
     
     @abstractmethod
