@@ -58,7 +58,7 @@ def test_ubrev():
  
 def test_loinc():
     vocab = LOINC()
-    assert_equal(vocab.parse('10037-*->10038-8'), 
+    assert_equal(vocab.parse('10037-*-10038-8'), 
                  {'10037-0', '10038-8'})
  
 def test_hcpcs():
