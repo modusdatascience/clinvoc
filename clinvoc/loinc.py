@@ -1,7 +1,6 @@
 import csv
-from .base import RegexVocabulary, create_bisection_range_filler, create_fnmatch_wildcard_matcher, \
-    LexicographicPatternMatchVocabulary, LexicographicRangeFillVocabulary, LexicographicVocabulary, \
-    left_pad
+from .base import RegexVocabulary, LexicographicPatternMatchVocabulary, LexicographicRangeFillVocabulary, \
+    LexicographicVocabulary, left_pad
 import os
 from .resources import resources
 
