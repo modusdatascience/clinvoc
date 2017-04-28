@@ -2,3 +2,6 @@ name: clinvocdev
 dependencies:
     - python=2.7.12
     - nose
+    - pip:
+        - pyparsing==2.2.0
+        - toolz==0.8.2
