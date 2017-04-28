@@ -1,5 +1,5 @@
 import re
-from .base import SimpleParseVocabulary
+from .base import RegexVocabulary
 
 _ubrev_split_regex = re.compile('([0-9]+)([A-z]*)')
 def ubrev_split(code):
@@ -12,7 +12,8 @@ def ubrev_join(number_part, letter_part):
     digits = 4 - len(letter_part)
     return (('%%.%dd' % digits) % int(number_part)) + letter_part
 
-class UBREV(SimpleParseVocabulary):
+class UBREV(RegexVocabulary):
+    regex = re.compile('[\d]{1,2}\.?(([\d]{1,2})|([\d][A-z]))')
     @staticmethod
     def _fill_range(start, end):
         start_number, start_letter = ubrev_split(start)
@@ -25,7 +26,8 @@ class UBREV(SimpleParseVocabulary):
     
     @staticmethod
     def _match_pattern(pattern):
-        return [pattern]
+        assert '*' not in pattern 
+        return set([pattern])
     
     @staticmethod
     def standardize(code):
