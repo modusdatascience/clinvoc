@@ -156,10 +156,16 @@ def create_parser(regex, pattern_matcher, range_filler, quote_pairs=[('\'','\'')
     
     code_range = quoted_code_pattern + Literal('-').suppress() + quoted_code_pattern
     code_range.setParseAction(lambda s, loc, toks: frozenset(range_filler(toks[0], toks[1])))
-    code_list_continuation = reduce(or_, map(Literal, delimiters)).suppress() + (code_range | quoted_code_pattern)
+    
+    quoted_code_range = NoMatch()
+    for opener, closer in quote_pairs:
+        quoted_code_range ^= Literal(opener).suppress() + code_pattern + Literal('-').suppress() + code_pattern + Literal(closer).suppress()
+    quoted_code_range.setParseAction(lambda s, loc, toks: frozenset(range_filler(toks[0], toks[1])))
+    any_code_range = (quoted_code_range ^ code_range)
+    code_list_continuation = reduce(or_, map(Literal, delimiters)).suppress() + (any_code_range | quoted_code_pattern)
     if not require_delimiter:
-        code_list_continuation |= White().suppress() + (code_range | quoted_code_pattern)
-    code_list = (code_range | quoted_code_pattern) + ZeroOrMore(code_list_continuation) + Optional(reduce(or_, map(Literal, delimiters))).suppress() + StringEnd()
+        code_list_continuation |= White().suppress() + (any_code_range | quoted_code_pattern)
+    code_list = (any_code_range | quoted_code_pattern) + ZeroOrMore(code_list_continuation) + Optional(reduce(or_, map(Literal, delimiters))).suppress() + StringEnd()
     return code_list
 
 all_quote_pairs = (('\'','\''), ('"','"'), ('‘','’'))
