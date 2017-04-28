@@ -1,5 +1,5 @@
 # coding: utf-8
-from bisect import bisect_left
+from bisect import bisect_left, bisect_right
 from abc import abstractmethod
 import fnmatch
 import re
@@ -166,7 +166,25 @@ class LexiconVocabulary(Vocabulary):
     def check(self, code):
         return code in self.lexicon
 
+class LexicographicRangeFillVocabulary(Vocabulary):
+    def _fill_range(self, lower, upper):
+        left_idx = bisect_left(self.sorted_lexicon, lower)
+        right_idx = bisect_right(self.sorted_lexicon, upper)
+        return self.sorted_lexicon[left_idx:right_idx]
 
+class LexicographicPatternMatchVocabulary(Vocabulary):
+    def _match_pattern(self, pattern):
+        return fnmatch.filter(self.sorted_lexicon, pattern)
+
+class NoWildcardsVocabulary(Vocabulary):
+    def _match_pattern(self, pattern):
+        if '*' in pattern:
+            raise NotImplementedError('%s does not support wildcards.' % type(self).__name__)
+        return set([pattern])
+
+class NoRangeFillVocabulary(Vocabulary):
+    def _fill_range(self, lower, upper):
+        raise NotImplementedError('%s does not support range filling.' % type(self).__name__)
 # class ParserMeta(type):
 #     def __init__(cls, name, bases, dct):
 #         super(ParserMeta, cls).__init__(name, bases, dct)

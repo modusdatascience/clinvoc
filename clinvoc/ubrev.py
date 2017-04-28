@@ -1,5 +1,5 @@
 import re
-from .base import RegexVocabulary
+from .base import RegexVocabulary, NoWildcardsVocabulary
 
 _ubrev_split_regex = re.compile('([0-9]+)([A-z]*)')
 def ubrev_split(code):
@@ -12,7 +12,7 @@ def ubrev_join(number_part, letter_part):
     digits = 4 - len(letter_part)
     return (('%%.%dd' % digits) % int(number_part)) + letter_part
 
-class UBREV(RegexVocabulary):
+class UBREV(RegexVocabulary, NoWildcardsVocabulary):
     regex = re.compile('[\d]{1,2}\.?(([\d]{1,2})|([\d][A-z]))')
     @staticmethod
     def _fill_range(start, end):
@@ -25,10 +25,5 @@ class UBREV(RegexVocabulary):
         return result
     
     @staticmethod
-    def _match_pattern(pattern):
-        assert '*' not in pattern 
-        return set([pattern])
-    
-    @staticmethod
-    def standardize(code):
+    def _standardize(code):
         return ubrev_join(*ubrev_split(code))
