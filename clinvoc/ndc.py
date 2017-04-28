@@ -15,29 +15,19 @@ def code_to_tup(code):
         return part1 + part2 + part3
     else:
         raise ValueError
-    
-def tup_to_code(tup):
-    return ''.join(tup)
 
 with open(os.path.join(resources, 'ndctext', 'package.txt')) as infile:
     reader = csv.reader(infile, delimiter='\t')
     reader.next()
     all_ndc_codes = []
     for row in reader:
-        try:
-            all_ndc_codes.append(code_to_tup(row[2]))
-        except:
-            print row[2]
-            raise
+        all_ndc_codes.append(row[2])
         
-all_ndc_codes.sort()
-all_ndc_codes = map(tup_to_code, all_ndc_codes)
-    
 class NDC(RegexVocabulary, LexiconVocabulary): # Diamond inheritance!
     def __init__(self):
-        RegexVocabulary.__init__(self, r'([\d\*]{1,5}-[\d\*]{1,4}-[\d\*]{1,2})|([\d\*]{4,9}[a-zA-Z\d\*]{1,2})')
+        RegexVocabulary.__init__(self, r'([\d\*]{1,5}\-[\d\*]{1,4}\-(([\d\*]{1,2})|([a-zA-Z\*][\d\*]?)|(0[a-zA-Z\*])))|([\d\*]{4,9}[a-zA-Z\d\*]{1,2})')
         LexiconVocabulary.__init__(self, all_ndc_codes)
-        
+    
     def _match_pattern(self, pattern):
         return set(map(self.standardize, 
                        set(map(partial(reduce, add), product(*map(lambda x: [x] if x != '*' else list(map(str, range(10))), 

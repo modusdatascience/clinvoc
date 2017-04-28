@@ -69,14 +69,20 @@ class Vocabulary(object):
     def check(self, code):
         raise NotImplementedError
     
-    def match_pattern(self, pattern):
-        return frozenset([self.standardize(code) for code in self._match_pattern(self.standardize(pattern))])
-    
     def strict_parse(self, expression, *args, **kwargs):
         return self.filter(self.parse(expression, *args, **kwargs))
     
+    def match_pattern(self, pattern):
+        return set([self.standardize(code) for code in self._match_pattern(self.standardize(pattern))])
+    
+    def strict_match_pattern(self, pattern):
+        return self.filter(self.match_pattern(pattern))
+    
     def fill_range(self, lower, upper):
-        return [self.standardize(code) for code in self._fill_range(self.standardize(lower), self.standardize(upper))]
+        return set(map(self.standardize, self._fill_range(self.standardize(lower), self.standardize(upper))))
+    
+    def strict_fill_range(self, lower, upper):
+        return self.filter(self.fill_range(lower, upper))
     
     def fill_set_range(self, lowers, uppers):
         result = set([])
@@ -84,13 +90,19 @@ class Vocabulary(object):
             result.update(self._fill_range(lower, upper))
         return result
     
+    def strict_fill_set_range(self, lowers, uppers):
+        return self.filter(self.fill_set_range(lowers, uppers))
+    
     def fill_pattern_range(self, lower, upper):
         lowers = self.match_pattern(lower)
         uppers = self.match_pattern(upper)
         return self.fill_set_range(lowers, uppers)
-        
+    
+    def strict_fill_pattern_range(self, lower, upper):
+        return self.filter(self.fill_pattern_range(lower, upper))
+    
     def filter(self, codes):
-        return filter(self.check, codes)
+        return set(filter(self.check, codes))
 
 class SimpleParseVocabulary(Vocabulary):
     def parse(self, expression, delimiter=',;\s', range_delimiter='-'):
@@ -158,7 +170,7 @@ class RegexVocabulary(Vocabulary):
         return set(chain(*parser.parseString(expression)))
     
     def standardize(self, code):
-        assert self.regex.match(code)
+        assert self.regex.match(code), '%s is not a valid code for %s' % (code, type(self).__name__)
         return self._standardize(code)
     
     @abstractmethod
