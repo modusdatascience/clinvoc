@@ -6,27 +6,21 @@ import os
 from clinvoc.resources import resources
 import csv
 
-def code_to_tup(code):
-    if '-' in code:
-        part1, part2, part3 = code.split('-')
-        part1 = left_pad(part1, 5)
-        part2 = left_pad(part2, 4)
-        part3 = left_pad(part3, 2)
-        return part1 + part2 + part3
-    else:
-        raise ValueError
+def _read_text_file(filename):
+    with open(filename, 'rb') as infile:
+        reader = csv.reader(infile, delimiter='\t')
+        reader.next()
+        _all_ndc_codes = []
+        for row in reader:
+            _all_ndc_codes.append(row[2])
+    return _all_ndc_codes
 
-with open(os.path.join(resources, 'ndctext', 'package.txt')) as infile:
-    reader = csv.reader(infile, delimiter='\t')
-    reader.next()
-    all_ndc_codes = []
-    for row in reader:
-        all_ndc_codes.append(row[2])
+_all_ndc_codes = _read_text_file(os.path.join(resources, 'ndctext', 'package.txt'))
         
 class NDC(RegexVocabulary, LexiconVocabulary): # Diamond inheritance!
     def __init__(self):
         RegexVocabulary.__init__(self, r'([\d\*]{1,5}\-[\d\*]{1,4}\-(([\d\*]{1,2})|([a-zA-Z\*][\d\*]?)|(0[a-zA-Z\*])))|([\d\*]{4,9}[a-zA-Z\d\*]{1,2})')
-        LexiconVocabulary.__init__(self, all_ndc_codes)
+        LexiconVocabulary.__init__(self, _all_ndc_codes)
     
     def _match_pattern(self, pattern):
         return set(map(self.standardize, 
@@ -35,7 +29,11 @@ class NDC(RegexVocabulary, LexiconVocabulary): # Diamond inheritance!
     
     def _standardize(self, code):
         if '-' in code:
-            return reduce(add, code_to_tup(code))
+            part1, part2, part3 = code.split('-')
+            part1 = left_pad(part1, 5)
+            part2 = left_pad(part2, 4)
+            part3 = left_pad(part3, 2)
+            return part1 + part2 + part3
         else:
             return left_pad(code, 11)
     

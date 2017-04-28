@@ -13,11 +13,11 @@ def _read_text_file(filename):
             codes.append(line[0])
     return codes
 
-all_loinc_codes = _read_text_file(os.path.join(resources, 'LOINC_2.59_Text', 'loinc.csv'))
+_all_loinc_codes = _read_text_file(os.path.join(resources, 'LOINC_2.59_Text', 'loinc.csv'))
 class LOINC(RegexVocabulary, LexicographicPatternMatchVocabulary, LexicographicRangeFillVocabulary):
     def __init__(self):
         RegexVocabulary.__init__(self, '[\d\*]{1,5}\-[\d\*]')
-        LexicographicVocabulary.__init__(self, all_loinc_codes)
+        LexicographicVocabulary.__init__(self, _all_loinc_codes)
         
     def _standardize(self, code):
         return left_pad(code, 7)
