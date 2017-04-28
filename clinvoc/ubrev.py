@@ -13,7 +13,9 @@ def ubrev_join(number_part, letter_part):
     return (('%%.%dd' % digits) % int(number_part)) + letter_part
 
 class UBREV(RegexVocabulary, NoWildcardsVocabulary):
-    regex = re.compile('[\d]{1,2}\.?(([\d]{1,2})|([\d][A-z]))')
+    def __init__(self):
+        RegexVocabulary.__init__(self, '[\d]{1,2}\.?(([\d]{1,2})|([\d][A-z]))')
+
     @staticmethod
     def _fill_range(start, end):
         start_number, start_letter = ubrev_split(start)

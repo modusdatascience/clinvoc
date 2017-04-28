@@ -5,8 +5,6 @@ from itertools import product
 import os
 from clinvoc.resources import resources
 import csv
-import re
-
 
 def code_to_tup(code):
     if '-' in code:
@@ -36,8 +34,10 @@ all_ndc_codes.sort()
 all_ndc_codes = map(tup_to_code, all_ndc_codes)
     
 class NDC(RegexVocabulary, LexiconVocabulary): # Diamond inheritance!
-    regex = re.compile(r'([\d\*]{1,5}-[\d\*]{1,4}-[\d\*]{1,2})|([\d\*]{4,9}[a-zA-Z\d\*]{1,2})')
-    lexicon = set(all_ndc_codes)
+    def __init__(self):
+        RegexVocabulary.__init__(self, r'([\d\*]{1,5}-[\d\*]{1,4}-[\d\*]{1,2})|([\d\*]{4,9}[a-zA-Z\d\*]{1,2})')
+        LexiconVocabulary.__init__(self, all_ndc_codes)
+        
     def _match_pattern(self, pattern):
         return set(map(self.standardize, 
                        set(map(partial(reduce, add), product(*map(lambda x: [x] if x != '*' else list(map(str, range(10))), 

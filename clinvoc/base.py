@@ -148,10 +148,13 @@ def create_parser(regex, pattern_matcher, range_filler, quote_pairs=[('\'','\'')
 
 all_quote_pairs = (('\'','\''), ('"','"'), ('‘','’'))
 class RegexVocabulary(Vocabulary):
+    def __init__(self, regex):
+        self.regex = re.compile(regex)
+        
     def parse(self, expression,  quote_pairs=all_quote_pairs,
               delimiters=(',',), require_quotes=False, require_delimiter=False):
-        parser = create_parser(self.regex, self.match_pattern, self.fill_set_range, quote_pairs=quote_pairs,
-                               delimiters=delimiters, require_quotes=require_quotes, require_delimiter=require_delimiter)
+        parser = create_parser(self.regex, self.match_pattern, self.fill_set_range, quote_pairs=tuple(quote_pairs),
+                               delimiters=tuple(delimiters), require_quotes=require_quotes, require_delimiter=require_delimiter)
         return set(chain(*parser.parseString(expression)))
     
     def standardize(self, code):
@@ -163,16 +166,26 @@ class RegexVocabulary(Vocabulary):
         raise NotImplementedError
 
 class LexiconVocabulary(Vocabulary):
+    def __init__(self, lexicon):
+        self.lexicon = set(lexicon)
+        
     def check(self, code):
         return code in self.lexicon
 
-class LexicographicRangeFillVocabulary(Vocabulary):
+class LexicographicVocabulary(Vocabulary):
+    def __init__(self, lexicon):
+        self.sorted_lexicon = sorted(lexicon)
+
+class LexicographicRangeFillVocabulary(LexicographicVocabulary):
+    '''
+    Requires that ordering of codes is the same as for strings.
+    '''
     def _fill_range(self, lower, upper):
         left_idx = bisect_left(self.sorted_lexicon, lower)
         right_idx = bisect_right(self.sorted_lexicon, upper)
         return self.sorted_lexicon[left_idx:right_idx]
 
-class LexicographicPatternMatchVocabulary(Vocabulary):
+class LexicographicPatternMatchVocabulary(LexicographicVocabulary):
     def _match_pattern(self, pattern):
         return fnmatch.filter(self.sorted_lexicon, pattern)
 
