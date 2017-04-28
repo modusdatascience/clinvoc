@@ -26,7 +26,7 @@ all_splitted_loinc_codes = split_and_sort_codes(read_text_file(os.path.join(reso
 all_loinc_codes = join_codes(all_splitted_loinc_codes)
 splitted_range_filler = create_bisection_range_filler(all_splitted_loinc_codes, 'splitted_range_filler')
 pattern_matcher = create_fnmatch_wildcard_matcher(all_loinc_codes, 'pattern_matcher')
-class LOINC(RegexVocabulary, LexiconVocabulary, LexicographicPatternMatchVocabulary, LexicographicRangeFillVocabulary):
+class LOINC(RegexVocabulary, LexicographicPatternMatchVocabulary, LexicographicRangeFillVocabulary):
     def __init__(self):
         RegexVocabulary.__init__(self, '[\d\*]{1,5}\-[\d\*]')
         LexiconVocabulary.__init__(self, all_loinc_codes)

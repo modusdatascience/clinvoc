@@ -167,27 +167,32 @@ class RegexVocabulary(Vocabulary):
 
 class LexiconVocabulary(Vocabulary):
     def __init__(self, lexicon):
-        self.lexicon = set(lexicon)
+        self.lexicon_set = set(map(self.standardize, lexicon))
         
     def check(self, code):
-        return code in self.lexicon
+        return code in self.lexicon_set
 
-class LexicographicVocabulary(Vocabulary):
+class LexicographicVocabulary(LexiconVocabulary):
     def __init__(self, lexicon):
-        self.sorted_lexicon = sorted(lexicon)
+        LexiconVocabulary.__init__(self, lexicon)
+        self.raw_sorted_lexicon = sorted(self.lexicon_set)
+        self.sorted_lexicon = sorted(map(self.orderfy, self.lexicon_set))
+        
+    def orderfy(self, code):
+        return code
+    
+    def deorderfy(self, ordobj):
+        return ordobj
 
 class LexicographicRangeFillVocabulary(LexicographicVocabulary):
-    '''
-    Requires that ordering of codes is the same as for strings.
-    '''
     def _fill_range(self, lower, upper):
-        left_idx = bisect_left(self.sorted_lexicon, lower)
-        right_idx = bisect_right(self.sorted_lexicon, upper)
-        return self.sorted_lexicon[left_idx:right_idx]
+        left_idx = bisect_left(self.sorted_lexicon, self.orderfy(lower))
+        right_idx = bisect_right(self.sorted_lexicon, self.orderfy(upper))
+        return map(self.deorderfy, self.sorted_lexicon[left_idx:right_idx])
 
 class LexicographicPatternMatchVocabulary(LexicographicVocabulary):
     def _match_pattern(self, pattern):
-        return fnmatch.filter(self.sorted_lexicon, pattern)
+        return fnmatch.filter(self.raw_sorted_lexicon, pattern)
 
 class NoWildcardsVocabulary(Vocabulary):
     def _match_pattern(self, pattern):
