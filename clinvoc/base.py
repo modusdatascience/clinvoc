@@ -172,6 +172,7 @@ all_quote_pairs = (('\'','\''), ('"','"'), ('‘','’'))
 class RegexVocabulary(Vocabulary):
     def __init__(self, regex):
         self.regex = re.compile(regex)
+        self.exact_regex = re.compile('^%s$' % regex)
         
     def parse(self, expression,  quote_pairs=all_quote_pairs,
               delimiters=(',',), require_quotes=False, require_delimiter=False):
@@ -180,8 +181,9 @@ class RegexVocabulary(Vocabulary):
         return set(chain(*parser.parseString(expression)))
     
     def standardize(self, code):
-        assert self.regex.match(code), '%s is not a properly formatted code for %s' % (code, type(self).__name__)
-        return self._standardize(code)
+        code_ = code.strip()
+        assert self.exact_regex.match(code_), '%s is not a properly formatted code for %s' % (code, type(self).__name__)
+        return self._standardize(code_)
     
     @abstractmethod
     def _standardize(self, code):
