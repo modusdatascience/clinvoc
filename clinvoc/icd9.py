@@ -1,6 +1,6 @@
 import os
 from .resources import resources
-from .base import create_bisection_range_filler, create_fnmatch_wildcard_matcher, Vocabulary
+from .base import create_bisection_range_filler, create_fnmatch_wildcard_matcher, SimpleParseVocabulary
 
 def parse_dx_code(code):
     code = code.upper()
@@ -70,7 +70,7 @@ def read_px_text_file(filename):
 # icd9_dx_range_fill = create_bisection_range_filler(all_icd9_dx_codes)
 # icd9_px_range_fill = create_bisection_range_filler(all_icd9_px_codes)
 
-class ICD9PCS(Vocabulary):
+class ICD9PCS(SimpleParseVocabulary):
     all_icd9_px_codes = read_px_text_file(os.path.join(resources, 'CMS32_DESC_SHORT_SG.txt')).keys()
     all_icd9_px_codes.sort()
     _fill_range = staticmethod(create_bisection_range_filler(all_icd9_px_codes, '_fill_range'))
@@ -79,7 +79,7 @@ class ICD9PCS(Vocabulary):
         result = code.strip()
         return result
 
-class ICD9CM(Vocabulary):
+class ICD9CM(SimpleParseVocabulary):
     all_icd9_dx_codes = read_dx_text_file(os.path.join(resources, 'CMS32_DESC_SHORT_DX.txt')).keys()
     all_icd9_dx_codes.sort()
     _fill_range = staticmethod(create_bisection_range_filler(all_icd9_dx_codes, '_fill_range'))

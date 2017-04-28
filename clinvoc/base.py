@@ -92,6 +92,40 @@ class Vocabulary(object):
     def filter(self, codes):
         return filter(self.check, codes)
 
+class SimpleParseVocabulary(Vocabulary):
+    def parse(self, expression, delimiter=',;\s', range_delimiter='-'):
+        delimiter_pattern = re.compile('[^%s]+' % delimiter)
+        range_delimiter_pattern = re.compile(range_delimiter)
+        
+        # Remove any whitespace around range delimiters
+        delimiter_range_delimiter_reduction_pattern = re.compile('\s*%s\s*' % range_delimiter)
+        reduced_expression = delimiter_range_delimiter_reduction_pattern.sub(range_delimiter, expression)
+        
+        # Break into parts by delimiter
+        parts = delimiter_pattern.findall(reduced_expression)
+        
+        # Now look for any ranges or wild cards
+        codes = set()
+        for raw_part in parts:
+            # Remove quotes
+            part = raw_part.replace('\'', '').replace('"', '').replace('’', '').replace('‘', '')
+            
+            # Handle ranges and patterns
+            if range_delimiter_pattern.search(part):
+                raw_start, raw_end = re.split("'?\s*%s\s*'?" % range_delimiter, part)
+                starts = self.match_pattern(raw_start)
+                assert starts
+                ends = self.match_pattern(raw_end)
+                assert ends
+                for start in starts:
+                    for end in ends:
+                        codes.update(self.fill_range(start, end))
+            else:
+                matches = self.match_pattern(part)
+                assert matches
+                codes.update(matches)
+        return codes
+
 @memoize
 def create_parser(regex, pattern_matcher, range_filler, quote_pairs=[('\'','\''), ('"','"')], delimiters=[','], 
                   require_quotes=False, require_delimiter=False):
@@ -120,6 +154,13 @@ class RegexVocabulary(Vocabulary):
                                delimiters=delimiters, require_quotes=require_quotes, require_delimiter=require_delimiter)
         return set(chain(*parser.parseString(expression)))
     
+    def standardize(self, code):
+        assert self.regex.match(code)
+        return self._standardize(code)
+    
+    @abstractmethod
+    def _standardize(self, code):
+        raise NotImplementedError
 
 class LexiconVocabulary(Vocabulary):
     def check(self, code):

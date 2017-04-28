@@ -1,5 +1,5 @@
 import re
-from .base import Vocabulary
+from .base import SimpleParseVocabulary
 
 _ubrev_split_regex = re.compile('([0-9]+)([A-z]*)')
 def ubrev_split(code):
@@ -12,7 +12,7 @@ def ubrev_join(number_part, letter_part):
     digits = 4 - len(letter_part)
     return (('%%.%dd' % digits) % int(number_part)) + letter_part
 
-class UBREV(Vocabulary):
+class UBREV(SimpleParseVocabulary):
     @staticmethod
     def _fill_range(start, end):
         start_number, start_letter = ubrev_split(start)

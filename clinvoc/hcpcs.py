@@ -1,4 +1,4 @@
-from .base import Vocabulary
+from .base import SimpleParseVocabulary
 import re
 
 _hcpcs_split_regex = re.compile('([A-z]*)([0-9]+)')
@@ -14,7 +14,7 @@ def hcpcs_join(letter_part, number_part):
 
 
 
-class HCPCS(Vocabulary):
+class HCPCS(SimpleParseVocabulary):
     @staticmethod
     def _fill_range(start, end):
         start_letter, start_number = hcpcs_split(start)
@@ -35,7 +35,7 @@ class HCPCS(Vocabulary):
         assert len(result) == 5
         return result
 
-class HCPCSModifier(Vocabulary):
+class HCPCSModifier(SimpleParseVocabulary):
     @staticmethod
     def _fill_range(start, end):
         return [start, end]
