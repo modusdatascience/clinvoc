@@ -4,7 +4,8 @@ from abc import abstractmethod
 import fnmatch
 import re
 from toolz.functoolz import memoize
-from pyparsing import Regex, NoMatch, Literal, White, ZeroOrMore, StringEnd
+from pyparsing import Regex, NoMatch, Literal, White, ZeroOrMore, StringEnd,\
+    Optional
 from operator import or_
 from itertools import product, chain
 
@@ -158,7 +159,7 @@ def create_parser(regex, pattern_matcher, range_filler, quote_pairs=[('\'','\'')
     code_list_continuation = reduce(or_, map(Literal, delimiters)).suppress() + (code_range | quoted_code_pattern)
     if not require_delimiter:
         code_list_continuation |= White().suppress() + (code_range | quoted_code_pattern)
-    code_list = (code_range | quoted_code_pattern) + ZeroOrMore(code_list_continuation) + StringEnd()
+    code_list = (code_range | quoted_code_pattern) + ZeroOrMore(code_list_continuation) + Optional(reduce(or_, map(Literal, delimiters))).suppress() + StringEnd()
     return code_list
 
 all_quote_pairs = (('\'','\''), ('"','"'), ('‘','’'))
@@ -185,7 +186,7 @@ class LexiconVocabulary(Vocabulary):
         self.lexicon_set = set(map(self.standardize, lexicon))
         
     def check(self, code):
-        return code in self.lexicon_set
+        return self.standardize(code) in self.lexicon_set
 
 class LexicographicVocabulary(LexiconVocabulary):
     def __init__(self, lexicon):
