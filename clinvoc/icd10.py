@@ -1,7 +1,8 @@
 import os
 from .resources import resources
-from .base import create_bisection_range_filler, create_fnmatch_wildcard_matcher,\
-    left_pad, SimpleParseVocabulary
+from .base import RegexVocabulary, LexicographicPatternMatchVocabulary,\
+    LexicographicRangeFillVocabulary
+from clinvoc.base import LexicographicVocabulary
 
 def parse_code(code):
     code = code.upper()
@@ -13,35 +14,35 @@ def parse_code(code):
         result = code
     return result
 
-def read_text_file(filename):
-    result = {}
+def _read_text_file(filename):
+    result = []
     with open(filename, 'rb') as infile:
         for line in infile:
-            code = line[:7]
-            desc = line[8:].strip()
-            result[parse_code(code)] = desc
+            result.append(line[:7])
     return result
 
-all_icd10_pcs_codes = read_text_file(os.path.join(resources, 'icd10pcs_codes_2016.txt')).keys()
-all_icd10_pcs_codes.sort()
-all_icd10_cm_codes = read_text_file(os.path.join(resources, 'icd10cm_codes_2016.txt')).keys()
-all_icd10_cm_codes.sort()
+_all_icd10_pcs_codes = _read_text_file(os.path.join(resources, 'icd10pcs_codes_2016.txt'))
+_all_icd10_cm_codes = _read_text_file(os.path.join(resources, 'icd10cm_codes_2016.txt'))
 
-class ICD10PCS(SimpleParseVocabulary):
-    _fill_range = staticmethod(create_bisection_range_filler(all_icd10_pcs_codes, '_fill_range'))
-    _match_pattern = staticmethod(create_fnmatch_wildcard_matcher(all_icd10_pcs_codes, '_match_pattern'))
-    def standardize(self, code):
-        result = code.strip()
-        if '.' not in code:
-            result = left_pad(result, 7)
-            result = result[:3] + '.' + result[3:]
+class ICD10Base(RegexVocabulary, LexicographicPatternMatchVocabulary, LexicographicRangeFillVocabulary):
+    def _standardize(self, code):
+        code_ = code.strip().upper()
+        if '.' in code_:
+            result = code_
         else:
-            result = left_pad(result, 8)
+            result = code_[:3]
+            if len(code_) > 3:
+                result += '.' + code_[3:]
         return result
 
-class ICD10CM(SimpleParseVocabulary):
-    _fill_range = staticmethod(create_bisection_range_filler(all_icd10_cm_codes, '_fill_range'))
-    _match_pattern = staticmethod(create_fnmatch_wildcard_matcher(all_icd10_cm_codes, '_match_pattern'))
-    def standardize(self, code):
-        result = code.strip()
-        return result
+class ICD10PCS(ICD10Base):
+    def __init__(self):
+        RegexVocabulary.__init__(self, '[A-TV-Z0-9\*][A-Z0-9\*][A-Z0-9\*]((\.[A-Z0-9\*]{1,4})|([A-Z0-9\*]{0,4}))')
+        LexicographicVocabulary.__init__(self, _all_icd10_pcs_codes)
+        
+class ICD10CM(ICD10Base):
+    def __init__(self):
+        RegexVocabulary.__init__(self, '[A-TV-Z\*][0-9\*][A-Z0-9\*]((\.[A-Z0-9\*]{1,4})|([A-Z0-9\*]{0,4}))')
+        LexicographicVocabulary.__init__(self, _all_icd10_cm_codes)
+        
+    
