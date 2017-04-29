@@ -63,12 +63,15 @@ def test_loinc():
  
 def test_hcpcs():
     vocab = HCPCS()
-    assert_equal(vocab.parse("'99377', '99378', 'G0182', 'G9473', 'G9474'"),
-                 {'99377', '99378', 'G0182', 'G9473', 'G9474'})
+    assert_equal(vocab.parse("'99377', '99378', 'G0182', 'G9473', 'G9474-G9477'"),
+                 {'99377', '99378', 'G0182', 'G9473', 'G9474', 'G9475', 'G9476', 'G9477'})
     assert_equal(vocab.parse("'99377-99378', 'G0182', 'G9473', 'G9474'"),
                  {'99377', '99378', 'G0182', 'G9473', 'G9474'})
     assert_equal(vocab.parse("'99377 -  99378', 'G0182', 'G9473      -G9474'"),
                  {'99377', '99378', 'G0182', 'G9473', 'G9474'})
+    assert_equal(vocab.parse("'G947*'"),
+                 {'G9470', 'G9471', 'G9472', 'G9473', 'G9474', 'G9475', 'G9476', 'G9477',
+                  'G9478', 'G9479', 'G947T', 'G947U', 'G947F', 'G947M'})
  
 def test_hcpcs_modifier():
     vocab = HCPCSModifier()

@@ -1,8 +1,9 @@
 from .base import RegexVocabulary, left_pad
 import re
 from clinvoc.base import NoWildcardsVocabulary, NoRangeFillVocabulary
+from itertools import product
 
-_hcpcs_split_regex = re.compile('([A-z]*)([0-9]+)')
+_hcpcs_split_regex = re.compile('^([A-Z]*)([0-9]+)([A-Z]*)$')
 def hcpcs_split(code):
     match = _hcpcs_split_regex.match(code)
     letter_part = match.groups()[0]
@@ -13,33 +14,43 @@ def hcpcs_join(letter_part, number_part):
     digits = 5 - len(letter_part)
     return letter_part + (('%%.%dd' % digits) % int(number_part))
 
-class HCPCS(RegexVocabulary, NoWildcardsVocabulary):
+class HCPCS(RegexVocabulary):
     def __init__(self):
-        level_1_regex = '(\d{4}F)|(\d{4}T)|(\d{1,5})'
-        level_2_regex = '[A-V]\d{4}'
-        RegexVocabulary.__init__(self, '(%s)|(%s)' % (level_1_regex, level_2_regex))
+        RegexVocabulary.__init__(self, '([\*ABCDEGHJKLMPQRSTVX\d][\d\*]{3}[FMTU\d\*])|([\d\*]{1,4}[FMTU\d\*])|([\d\*]{1,5})', ignore_case=True)
         
-    @staticmethod
-    def _fill_range(start, end):
-        start_letter, start_number = hcpcs_split(start)
-        end_letter, end_number = hcpcs_split(end)
-        assert start_letter == end_letter
+    def _fill_range(self, lower, upper):
+        lower_start_letter, lower_number, lower_end_letter = _hcpcs_split_regex.match(lower).groups()
+        upper_start_letter, upper_number, upper_end_letter = _hcpcs_split_regex.match(upper).groups()
+        assert lower_start_letter == upper_start_letter
+        assert lower_end_letter == upper_end_letter
         result = []
-        for num in range(int(start_number), int(end_number) + 1):
-            result.append(hcpcs_join(start_letter, num))
+        for num in range(int(lower_number), int(upper_number) + 1):
+            n = 5 - len(lower_start_letter) - len(lower_end_letter)
+            result.append(lower_start_letter + left_pad(str(num), n) + lower_end_letter)
         return result
     
-    @staticmethod
-    def _standardize(code):
+    _places = ['ABCDEGHJKLMPQRSTVX0123456789'] + \
+                 3 * ['0123456789'] + \
+                 ['FMTU0123456789']
+                 
+    def _match_pattern(self, pattern):
+        options = []
+        for i, item in enumerate(pattern):
+            if item == '*':
+                options.append(self._places[i])
+            else:
+                options.append([item])
+        return map(''.join, product(*options))
+    
+    def _standardize(self, code):
         return left_pad(code.strip().upper(), 5)
 
 class HCPCSModifier(RegexVocabulary, NoWildcardsVocabulary, NoRangeFillVocabulary):
     def __init__(self):
         RegexVocabulary.__init__(self, '[A-Za-z\d]{2}')
     
-    @staticmethod
-    def _standardize(code):
-        result = code.strip()
+    def _standardize(self, code):
+        result = code.strip().upper()
         assert len(result) == 2
         return result
     
