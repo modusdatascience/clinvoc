@@ -170,9 +170,13 @@ def create_parser(regex, pattern_matcher, range_filler, quote_pairs=[('\'','\'')
 
 all_quote_pairs = (('\'','\''), ('"','"'), ('‘','’'))
 class RegexVocabulary(Vocabulary):
-    def __init__(self, regex):
-        self.regex = re.compile(regex)
-        self.exact_regex = re.compile('^%s$' % regex)
+    def __init__(self, regex, ignore_case=False):
+        if ignore_case:
+            self.regex = re.compile(regex, re.IGNORECASE)
+            self.exact_regex = re.compile('^%s$' % regex, re.IGNORECASE)
+        else:
+            self.regex = re.compile(regex)
+            self.exact_regex = re.compile('^%s$' % regex)
         
     def parse(self, expression,  quote_pairs=all_quote_pairs,
               delimiters=(',',), require_quotes=False, require_delimiter=False):
