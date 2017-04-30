@@ -42,7 +42,7 @@ class ICD10PCS(ICD10Base):
         
 class ICD10CM(ICD10Base):
     def __init__(self):
-        RegexVocabulary.__init__(self, '[A-TV-Z\*][0-9\*][A-Z0-9\*]((\.[A-Z0-9\*]{1,4})|([A-Z0-9\*]{0,4}))')
+        RegexVocabulary.__init__(self, '[A-TV-Z0-9\*][A-Z0-9\*][A-Z0-9\*]((\.[A-Z0-9\*]{1,4})|([A-Z0-9\*]{0,4}))')
         LexicographicVocabulary.__init__(self, _all_icd10_cm_codes)
         
     
