@@ -52,6 +52,10 @@ def create_vocabulary_checker(codes, name=None):
 class Vocabulary(object):
     @abstractmethod
     def parse(self, expression):
+        '''
+        Convert a string containing codes, patterns (codes with wildcards), and code ranges to a set of standardized 
+        codes.
+        '''
         raise NotImplementedError
     
     @abstractmethod
@@ -60,6 +64,11 @@ class Vocabulary(object):
     
     @abstractmethod
     def standardize(self, code):
+        '''
+        Convert a code or pattern (code with wildcards) to a standard form.  The standard form should ensure that 
+        two codes have the same meaning if and only if they are identical.  For example, leading zeros, whitespace, 
+        dashes, or capitalization may be standardized.
+        '''
         raise NotImplementedError
     
     @abstractmethod
@@ -68,44 +77,95 @@ class Vocabulary(object):
     
     @abstractmethod
     def check(self, code):
+        '''
+        Check a code against the known lexicon.  Return True if the code matches a known code and
+        False otherwise.
+        '''
         raise NotImplementedError
     
     def strict_parse(self, expression, *args, **kwargs):
+        '''
+        Same as parse, but only returns codes that are present in the known lexicon.
+        '''
         return self.filter(self.parse(expression, *args, **kwargs))
     
     def match_pattern(self, pattern):
+        '''
+        Return a set of codes matching pattern, where pattern may contain wildcards.  Different vocabularies
+        may interpret wildcards slightly differently, but the general idea is that "*" matches anything.  In 
+        some vocabularies that might mean any valid substring, while in others it might mean any valid 
+        character.  
+        '''
         if '*' in pattern:
             return set([self.standardize(code) for code in self._match_pattern(self.standardize(pattern))])
         else:
             return set([self.standardize(pattern)])
     
     def strict_match_pattern(self, pattern):
+        '''
+        Same as match_pattern, but only return codes that are present in the known lexicon.
+        '''
         return self.filter(self.match_pattern(pattern))
     
     def fill_range(self, lower, upper):
+        '''
+        Return the set of all codes that are greater than or equal to lower and less than or equal to upper.  Not 
+        every code system is totally ordered.  In some cases, only a partial order is available, and in those cases
+        lower and upper must be comparable.  If lower and upper are not comparable, raise NotImplementedError.
+        '''
         return set(map(self.standardize, self._fill_range(self.standardize(lower), self.standardize(upper))))
     
     def strict_fill_range(self, lower, upper):
+        '''
+        Same as fill_range, but only return codes that are present in the known lexicon.
+        '''
         return self.filter(self.fill_range(lower, upper))
     
     def fill_set_range(self, lowers, uppers):
+        '''
+        Return the set of all codes that are greater than or equal to lower and less than or equal to upper for 
+        some lower in lowers and some upper in uppers.  Any incomparable pairs will be skipped.  If no pairs are 
+        comparable, raise a NotImplementedError.
+        '''
         result = set([])
+        any_implemented = False
         for lower, upper in product(lowers, uppers):
-            result.update(self._fill_range(lower, upper))
+            try:
+                result.update(self._fill_range(lower, upper))
+                any_implemented = True
+            except NotImplementedError:
+                pass
+        if not any_implemented:
+            raise NotImplementedError('No comparable code pairs found.')
         return result
     
     def strict_fill_set_range(self, lowers, uppers):
+        '''
+        Same as fill_set_range, but only return codes that are present in the known lexicon.
+        '''
         return self.filter(self.fill_set_range(lowers, uppers))
     
     def fill_pattern_range(self, lower, upper):
+        '''
+        Return the set of all codes that are greater than or equal to A and less than or equal to B for 
+        some A matching lower and some B matching upper.  Any incomparable pairs will be skipped.  If no pairs are 
+        comparable, raise a NotImplementedError.
+        '''
         lowers = self.match_pattern(lower)
         uppers = self.match_pattern(upper)
         return self.fill_set_range(lowers, uppers)
     
     def strict_fill_pattern_range(self, lower, upper):
+        '''
+        Same as fill_pattern_range, but only return codes that are present in the known lexicon.
+        '''
         return self.filter(self.fill_pattern_range(lower, upper))
     
     def filter(self, codes):
+        '''
+        Return only those codes that are in the known lexicon.  Codes are standardized for checking,
+        but returned in their original form.
+        '''
         return set(filter(self.check, codes))
 
 class SimpleParseVocabulary(Vocabulary):
