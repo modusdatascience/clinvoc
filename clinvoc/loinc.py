@@ -1,11 +1,10 @@
 import csv
-from .base import Vocabulary, create_bisection_range_filler, create_fnmatch_wildcard_matcher
+from .base import RegexVocabulary, LexicographicPatternMatchVocabulary, LexicographicRangeFillVocabulary, \
+    LexicographicVocabulary, left_pad
 import os
 from .resources import resources
-from toolz.functoolz import compose
 
-
-def read_text_file(filename):
+def _read_text_file(filename):
     codes = []
     with open(filename, 'rb') as infile:
         reader = csv.reader(infile, delimiter=',', quoting=csv.QUOTE_ALL)
@@ -14,33 +13,12 @@ def read_text_file(filename):
             codes.append(line[0])
     return codes
 
-def split_and_sort_codes(codes):
-    splitted = [tuple(int(x) for x in code.split('-')) for code in codes]
-    splitted.sort()
-#     joined = [str(pair[0]) + '-' + str(pair[1]) for pair in splitted]
-    return splitted
-
-def join_codes(codes):
-    return ['-'.join(map(str, pair)) for pair in codes]
-
-all_splitted_loinc_codes = split_and_sort_codes(read_text_file(os.path.join(resources, 'LOINC_2.59_Text', 'loinc.csv')))
-all_loinc_codes = join_codes(all_splitted_loinc_codes)
-splitted_range_filler = create_bisection_range_filler(all_splitted_loinc_codes, 'splitted_range_filler')
-pattern_matcher = create_fnmatch_wildcard_matcher(all_loinc_codes, 'pattern_matcher')
-class LOINC(Vocabulary):
-    @staticmethod
-    def _fill_range(lower, upper):
-        codes = splitted_range_filler(tuple(map(int, lower.split('-'))), tuple(map(int, upper.split('-')))) 
-        return join_codes(codes)
-    
-    def parse(self, expression, delimiter=',;\s', range_delimiter='->'):
-        return Vocabulary.parse(self, expression, delimiter=delimiter, range_delimiter=range_delimiter)
-    
-    @staticmethod
-    def _match_pattern(pattern):
-        return pattern_matcher(pattern)
+_all_loinc_codes = _read_text_file(os.path.join(resources, 'LOINC_2.59_Text', 'loinc.csv'))
+class LOINC(RegexVocabulary, LexicographicPatternMatchVocabulary, LexicographicRangeFillVocabulary):
+    def __init__(self):
+        RegexVocabulary.__init__(self, '[\d\*]{1,5}\-[\d\*]')
+        LexicographicVocabulary.__init__(self, _all_loinc_codes)
         
-    def standardize(self, code):
-        # Remove leading zeroes
-        return code.lstrip('0')
+    def _standardize(self, code):
+        return left_pad(code, 7)
         
