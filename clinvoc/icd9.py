@@ -1,7 +1,6 @@
 import os
 from .resources import resources
-from .base import SimpleParseVocabulary, left_pad
-from clinvoc.base import LexicographicPatternMatchVocabulary,\
+from .base import left_pad, LexicographicPatternMatchVocabulary,\
     LexicographicRangeFillVocabulary, LexicographicVocabulary, \
     RegexVocabulary
 
