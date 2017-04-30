@@ -5,7 +5,7 @@ import fnmatch
 import re
 from toolz.functoolz import memoize
 from pyparsing import Regex, NoMatch, Literal, White, ZeroOrMore, StringEnd,\
-    Optional
+    Optional, OneOrMore
 from operator import or_
 from itertools import product, chain
 
@@ -170,7 +170,7 @@ class Vocabulary(object):
 
 @memoize
 def create_parser(regex, pattern_matcher, range_filler, quote_pairs=[('\'','\''), ('"','"')], delimiters=[','], 
-                  require_quotes=False, require_delimiter=False):
+                  require_quotes=False, require_delimiter=False, allow_empty=True):
     code_pattern = Regex(regex)
     code_pattern.setParseAction(lambda s, loc, toks: frozenset(pattern_matcher(toks[0])))
     if require_quotes:
@@ -188,7 +188,10 @@ def create_parser(regex, pattern_matcher, range_filler, quote_pairs=[('\'','\'')
         quoted_code_range ^= Literal(opener).suppress() + code_pattern + Literal('-').suppress() + code_pattern + Literal(closer).suppress()
     quoted_code_range.setParseAction(lambda s, loc, toks: frozenset(range_filler(toks[0], toks[1])))
     any_code_range = (quoted_code_range ^ code_range)
-    code_list_continuation = reduce(or_, map(Literal, delimiters)).suppress() + (any_code_range | quoted_code_pattern)
+    any_delim = reduce(or_, map(Literal, delimiters))
+    if allow_empty:
+        any_delim = OneOrMore(any_delim)
+    code_list_continuation = any_delim.suppress() + (any_code_range | quoted_code_pattern)
     if not require_delimiter:
         code_list_continuation |= White().suppress() + (any_code_range | quoted_code_pattern)
     code_list = (any_code_range | quoted_code_pattern) + ZeroOrMore(code_list_continuation) + Optional(reduce(or_, map(Literal, delimiters))).suppress() + StringEnd()
