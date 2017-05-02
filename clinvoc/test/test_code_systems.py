@@ -26,10 +26,15 @@ def test_icd10_pcs():
                  {'021.0093', '021.0098', '021.0099', '021.1093', '021.1098'})
     assert_equal(vocab.parse("'0210093', '0210098 - 0210099', '0211093', '0211098'"), 
                  {'021.0093', '021.0098', '021.0099', '021.1093', '021.1098'})
-    assert_equal(vocab.parse("'0210093', '021009*', '0211093', '0211098'"), 
+    vocab = ICD10PCS(match_terminal_only=True, use_decimals=True)
+    assert_equal(vocab.parse("'21.0093', '021.009*', '21.1093', '021.1098'"), 
                  {'021.0093', '021.0098', '021.0099', '021.1093', '021.1098', '021.009C',
                   '021.009F', '021.009W'})
   
+def test_icd10_union():
+    vocab = ICD10CM(match_terminal_only=True) | ICD10PCS(match_terminal_only=True, use_leading_zeros=True)
+    assert_equal(vocab.parse("'0210093', ‘Z00.121’"), set(['021.0093', 'Z00.121']))
+    
 def test_icd9_cm():
     vocab = ICD9CM(match_terminal_only=True)
     assert_equal(vocab.parse("250.33, 250.40, 250.41, 250.42, 250.43,"),
