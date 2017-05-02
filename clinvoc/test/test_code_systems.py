@@ -8,7 +8,7 @@ from clinvoc.ndc import NDC
 from clinvoc.loinc import LOINC
 
 def test_icd10_cm():
-    vocab = ICD10CM()
+    vocab = ICD10CM(match_terminal_only=True)
     assert_equal(vocab.parse('‘Z00.00’, ‘Z00.01’, ‘Z00.121’, ‘Z00.129’, ‘Z00.8’'), 
                  {'Z00.00', 'Z00.01', 'Z00.121', 'Z00.129', 'Z00.8'})
     assert_equal(vocab.parse('‘Z00.00-Z00.01’, ‘Z00.121’, ‘Z00.129’, ‘Z00.8’'), 
@@ -21,7 +21,7 @@ def test_icd10_cm():
                  {'Z00.00', 'Z00.01', 'Z00.121', 'Z00.129', 'Z00.8'})
 
 def test_icd10_pcs():
-    vocab = ICD10PCS()
+    vocab = ICD10PCS(match_terminal_only=True)
     assert_equal(vocab.parse("'0210093', '0210098', '0210099', '0211093', '0211098'"), 
                  {'021.0093', '021.0098', '021.0099', '021.1093', '021.1098'})
     assert_equal(vocab.parse("'0210093', '0210098 - 0210099', '0211093', '0211098'"), 
@@ -31,7 +31,7 @@ def test_icd10_pcs():
                   '021.009F', '021.009W'})
   
 def test_icd9_cm():
-    vocab = ICD9CM()
+    vocab = ICD9CM(match_terminal_only=True)
     assert_equal(vocab.parse("250.33, 250.40, 250.41, 250.42, 250.43,"),
                  {'250.33', '250.40', '250.41', '250.42', '250.43'})
     assert_equal(vocab.parse("250.33, 250.40-250.43,"),
@@ -40,7 +40,7 @@ def test_icd9_cm():
                  {'250.33', '250.40', '250.41', '250.42', '250.43'})
   
 def test_icd9_pcs():
-    vocab = ICD9PCS()
+    vocab = ICD9PCS(match_terminal_only=True)
     assert_equal(vocab.parse("'79.27', '79.33', '79.37', '79.63', '79.67'"),
                  {'79.27', '79.33', '79.37', '79.63', '79.67'})
     assert_equal(vocab.parse("'79.37', '79.33'-'79.37', '79.63', '79.67'"),
