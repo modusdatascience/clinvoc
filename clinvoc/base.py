@@ -6,7 +6,7 @@ import re
 from toolz.functoolz import memoize
 from pyparsing import Regex, NoMatch, Literal, White, ZeroOrMore, StringEnd,\
     Optional, OneOrMore
-from operator import or_, xor
+from operator import xor, or_
 from itertools import product, chain, starmap
 
 def left_pad(code, expected_length, padding='0'):
@@ -179,15 +179,12 @@ def create_parser(regexes, pattern_matchers, range_fillers, quote_pairs=[('\'','
     assert len(regexes) == len(range_fillers)
     
     code_patterns = list(starmap(lambda regex, pattern_matcher: Regex(regex).setParseAction(lambda s, loc, toks: frozenset(pattern_matcher(toks[0]))), zip(regexes, pattern_matchers)))
-#     for pat in code_patterns
-#     code_pattern.setParseAction(lambda s, loc, toks: frozenset(pattern_matcher(toks[0])))
-#     code_pattern = reduce(or_, code_patterns)
     if require_quotes:
         quoted_code_patterns = [NoMatch() for _ in code_patterns]
     else:
         quoted_code_patterns = code_patterns
     for opener, closer in quote_pairs:
-        quoted_code_patterns = map(lambda code_pattern: code_pattern | (Literal(opener).suppress() + code_pattern + Literal(closer).suppress()), quoted_code_patterns)
+        quoted_code_patterns = list(starmap(lambda quoted_code_pattern, code_pattern: quoted_code_pattern | (Literal(opener).suppress() + code_pattern + Literal(closer).suppress()), zip(quoted_code_patterns, code_patterns)))
     
     code_ranges = map(lambda quoted_code_pattern: quoted_code_pattern + Literal('-').suppress() + quoted_code_pattern, quoted_code_patterns)
     code_ranges = list(starmap(lambda code_range, range_filler: code_range.setParseAction(lambda s, loc, toks: frozenset(range_filler(toks[0], toks[1]))), zip(code_ranges, range_fillers)))
@@ -197,9 +194,9 @@ def create_parser(regexes, pattern_matchers, range_fillers, quote_pairs=[('\'','
         quoted_code_ranges = list(starmap(lambda quoted_code_range, code_pattern: quoted_code_range | (Literal(opener).suppress() + code_pattern + Literal('-').suppress() + code_pattern + Literal(closer).suppress()), zip(quoted_code_ranges, code_patterns)))
     quoted_code_ranges = list(starmap(lambda quoted_code_range, range_filler: quoted_code_range.setParseAction(lambda s, loc, toks: frozenset(range_filler(toks[0], toks[1]))), zip(quoted_code_ranges, range_fillers)))
     any_code_ranges = list(starmap(or_, zip(quoted_code_ranges, code_ranges)))
-    quoted_code_pattern = reduce(or_, quoted_code_patterns)
-    any_code_range = reduce(or_, any_code_ranges)
-    any_delim = reduce(or_, map(Literal, delimiters))
+    quoted_code_pattern = reduce(xor, quoted_code_patterns)
+    any_code_range = reduce(xor, any_code_ranges)
+    any_delim = reduce(xor, map(Literal, delimiters))
     if allow_empty:
         any_delim = OneOrMore(any_delim)
     code_list_continuation = any_delim.suppress() + (any_code_range | quoted_code_pattern)
