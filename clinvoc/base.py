@@ -96,10 +96,11 @@ class Vocabulary(object):
         some vocabularies that might mean any valid substring, while in others it might mean any valid 
         character.  
         '''
-        if '*' in pattern:
-            return set([self.standardize(code) for code in self._match_pattern(self.standardize(pattern))])
-        else:
-            return set([self.standardize(pattern)])
+        standardized_pattern = self.standardize(pattern)
+        result = self._match_pattern(standardized_pattern)
+        if not result and '*' not in pattern:
+            result = set([standardized_pattern])
+        return result
     
     def strict_match_pattern(self, pattern):
         '''
@@ -266,7 +267,7 @@ class RegexUnionVocabulary(RegexVocabularyBase):
 
 class LexiconVocabulary(Vocabulary):
     def __init__(self, lexicon):
-        self.lexicon_set = set(map(self.standardize, lexicon))
+        self.lexicon_set = set(lexicon)
         
     def check(self, code):
         try:

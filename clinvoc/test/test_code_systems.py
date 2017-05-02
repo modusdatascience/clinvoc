@@ -21,7 +21,7 @@ def test_icd10_cm():
                  {'Z00.00', 'Z00.01', 'Z00.121', 'Z00.129', 'Z00.8'})
 
 def test_icd10_pcs():
-    vocab = ICD10PCS(match_terminal_only=True)
+    vocab = ICD10PCS(match_terminal_only=True, use_leading_zeros=True)
     assert_equal(vocab.parse("'0210093', '0210098', '0210099', '0211093', '0211098'"), 
                  {'021.0093', '021.0098', '021.0099', '021.1093', '021.1098'})
     assert_equal(vocab.parse("'0210093', '0210098 - 0210099', '0211093', '0211098'"), 
