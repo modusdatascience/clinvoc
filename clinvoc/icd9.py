@@ -68,8 +68,4 @@ class ICD9PCS(ICDBase):
     pre_lexicon = _all_icd9_pcs_codes
     def _standardize(self, code):
         return _standardize_icd9_pcs(code, self.use_decimals)
-    
-    
-def ICD9Mixed(*args, **kwargs):
-    return ICD9CM(*args, **kwargs) | ICD9PCS(*args, **kwargs)
 

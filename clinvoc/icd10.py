@@ -51,7 +51,3 @@ class ICD10PCS(ICD10Base):
   
 class ICD10CM(ICD10Base):
     pre_lexicon = _all_icd10_cm_codes
-
-def ICD10Mixed(*args, **kwargs):
-    return ICD10PCS(*args, **kwargs) | ICD10CM(*args, **kwargs)
-    
