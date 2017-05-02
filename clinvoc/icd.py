@@ -48,6 +48,7 @@ class ICDBase(RegexVocabulary, LexicographicPatternMatchVocabulary, Lexicographi
         self.use_decimals = use_decimals if use_decimals is not None else not use_leading_zeros
         self.use_leading_zeros = use_leading_zeros if use_leading_zeros is not None else not self.use_decimals
         assert not (self.use_decimals and self.use_leading_zeros)
+        assert self.use_decimals or self.use_leading_zeros
         if self.use_decimals:
             self.regex_text = self.decimal_regex
         else:
