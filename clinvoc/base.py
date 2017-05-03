@@ -1,6 +1,6 @@
 # coding: utf-8
 from bisect import bisect_left, bisect_right
-from abc import abstractmethod
+from abc import abstractmethod, ABCMeta, abstractproperty
 import fnmatch
 import re
 from toolz.functoolz import memoize
@@ -8,6 +8,7 @@ from pyparsing import Regex, NoMatch, Literal, White, ZeroOrMore, StringEnd,\
     Optional, OneOrMore
 from operator import xor, or_
 from itertools import product, chain, starmap
+from . import __version__, __clean__
 
 def left_pad(code, expected_length, padding='0'):
     n = len(code)
@@ -50,6 +51,37 @@ def create_vocabulary_checker(codes, name=None):
     return check
 
 class Vocabulary(object):
+    '''
+    The class of a vocabulary uniquely defines its output format, but not necessarily
+    its input format.
+    '''
+    __metaclass__ = ABCMeta
+    
+    @abstractproperty
+    def vocab_name(self):
+        '''
+        Every concrete Vocabulary must define a vocab_name.  These names should be unique.  This
+        uniqueness is not currently checked.
+        '''
+        pass
+    
+    @abstractproperty
+    def vocab_domain(self):
+        '''
+        Every concrete vocabulary must define a vocab_domain.  These generally indicate the type of 
+        things the vocab describes, such as diagnoses or procedures.
+        '''
+        pass
+    
+    def __new__(cls, *args, **kwargs):
+        result = super(Vocabulary, cls).__new__(cls)
+        result._version = __version__
+        result._clean = __clean__
+        return result
+    
+    def identity(self):
+        return self.vocab_domain, self.vocab_name, self._version, self._clean
+    
     @abstractmethod
     def parse(self, expression):
         '''
@@ -168,6 +200,24 @@ class Vocabulary(object):
         '''
         return set(map(self.standardize, filter(self.check, codes)))
 
+class DiagnosisVocabulary(Vocabulary):
+    vocab_domain = 'DX'
+
+class ProcedureVocabulary(Vocabulary):
+    vocab_domain = 'PX'
+
+class ObservationVocabulary(Vocabulary):
+    vocab_domain = 'OBS'
+    
+class MedicationVocabulary(Vocabulary):
+    vocab_domain = 'RX'
+
+class ModifierVocabulary(Vocabulary):
+    vocab_domain = 'MOD'
+
+class RevenueSourceVocabulary(Vocabulary):
+    vocab_domain = 'REV'
+  
 @memoize
 def create_parser(regexes, pattern_matchers, range_fillers, quote_pairs=[('\'','\''), ('"','"')], delimiters=[','], 
                   require_quotes=False, require_delimiter=False, allow_empty=True):
@@ -207,14 +257,7 @@ def create_parser(regexes, pattern_matchers, range_fillers, quote_pairs=[('\'','
 
 all_quote_pairs = (('\'','\''), ('"','"'), ('‘','’'))
 class RegexVocabularyBase(Vocabulary):
-    def standardize(self, code):
-        code_ = code.strip()
-        assert self.exact_regex.match(code_), '%s is not a properly formatted code for %s' % (code, type(self).__name__)
-        return self._standardize(code_)
-    
-    @abstractmethod
-    def _standardize(self, code):
-        raise NotImplementedError
+    pass
 
 class RegexVocabulary(RegexVocabularyBase):
     def __init__(self, regex, ignore_case=False):
@@ -224,7 +267,16 @@ class RegexVocabulary(RegexVocabularyBase):
         else:
             self.regex = re.compile(regex)
             self.exact_regex = re.compile('^%s$' % regex)
-        
+    
+    def standardize(self, code):
+        code_ = code.strip()
+        assert self.exact_regex.match(code_), '%s is not a properly formatted code for %s' % (code, type(self).__name__)
+        return self._standardize(code_)
+    
+    @abstractmethod
+    def _standardize(self, code):
+        raise NotImplementedError
+    
     def parse(self, expression,  quote_pairs=all_quote_pairs,
               delimiters=(',',), require_quotes=False, require_delimiter=False):
         parser = create_parser(self.regex, self.match_pattern, self.fill_set_range, quote_pairs=tuple(quote_pairs),
@@ -240,10 +292,35 @@ class RegexVocabulary(RegexVocabularyBase):
     def __ror__(self, other):
         return self.__or__(other)
 
-class RegexUnionVocabulary(RegexVocabularyBase):
+class NoCheckVocabulary(Vocabulary):
+    def check(self, code):
+        raise NotImplementedError('%s does not support checking against a fixed lexicon.' % type(self).__name__)
+    
+class NoWildcardsVocabulary(Vocabulary):
+    def _match_pattern(self, pattern):
+        if '*' in pattern:
+            raise NotImplementedError('%s does not support wildcards.' % type(self).__name__)
+        return set([pattern])
+
+class NoRangeFillVocabulary(Vocabulary):
+    def _fill_range(self, lower, upper):
+        raise NotImplementedError('%s does not support range filling.' % type(self).__name__)
+    
+class RegexUnionVocabulary(RegexVocabularyBase, NoWildcardsVocabulary, NoRangeFillVocabulary, NoCheckVocabulary):
+    '''
+    Note that order matters.  In ambiguous cases, the earlier argument takes precedence.
+    '''
     def __init__(self, *arguments):
         self.arguments = arguments
-        
+    
+    @property
+    def vocab_name(self):
+        return '_U_'.join(sorted(set([arg.vocab_name for arg in self.arguments])))
+    
+    @property
+    def vocab_domain(self):
+        return '_U_'.join(sorted(set([arg.vocab_domain for arg in self.arguments])))
+    
     def parse(self, expression,  quote_pairs=all_quote_pairs,
               delimiters=(',',), require_quotes=False, require_delimiter=False):
         parser = create_parser(tuple([arg.regex for arg in self.arguments]), tuple([arg.match_pattern for arg in self.arguments]), 
@@ -261,7 +338,15 @@ class RegexUnionVocabulary(RegexVocabularyBase):
         
     def __ror__(self, other):
         return self.__or__(other)
-
+    
+    def standardize(self, code):
+        for arg in self.arguments:
+            try:
+                return arg.standardize(code)
+            except:
+                pass
+        assert False, 'Code %s is not valid.' % code
+        
 class LexiconVocabulary(Vocabulary):
     def __init__(self, lexicon):
         self.lexicon_set = set(lexicon)
@@ -294,98 +379,4 @@ class LexicographicPatternMatchVocabulary(LexicographicVocabulary):
     def _match_pattern(self, pattern):
         return fnmatch.filter(self.raw_sorted_lexicon, pattern)
 
-class NoWildcardsVocabulary(Vocabulary):
-    def _match_pattern(self, pattern):
-        if '*' in pattern:
-            raise NotImplementedError('%s does not support wildcards.' % type(self).__name__)
-        return set([pattern])
 
-class NoRangeFillVocabulary(Vocabulary):
-    def _fill_range(self, lower, upper):
-        raise NotImplementedError('%s does not support range filling.' % type(self).__name__)
-# class ParserMeta(type):
-#     def __init__(cls, name, bases, dct):
-#         super(ParserMeta, cls).__init__(name, bases, dct)
-#         
-# 
-# class ParserVocabulary(Vocabulary):
-#     def __init__(self, ):
-#     '''
-#     Subclasses should define 
-#     '''
-#     def parse(self, expression):
-#         self.parser.
-
-    
-# 
-# class Vocabulary(object):
-#     @abstractmethod
-#     def parse(self, expression, delimiter=',;\s', range_delimiter='-'):
-#         delimiter_pattern = re.compile('[^%s]+' % delimiter)
-#         range_delimiter_pattern = re.compile(range_delimiter)
-#         
-#         # Remove any whitespace around range delimiters
-#         delimiter_range_delimiter_reduction_pattern = re.compile('\s*%s\s*' % range_delimiter)
-#         reduced_expression = delimiter_range_delimiter_reduction_pattern.sub(range_delimiter, expression)
-#         
-#         # Break into parts by delimiter
-#         parts = delimiter_pattern.findall(reduced_expression)
-#         
-#         # Now look for any ranges or wild cards
-#         codes = set()
-#         for raw_part in parts:
-#             # Remove quotes
-#             part = raw_part.replace('\'', '').replace('"', '').replace('’', '').replace('‘', '')
-#             
-#             # Handle ranges and patterns
-#             if range_delimiter_pattern.search(part):
-#                 raw_start, raw_end = re.split("'?\s*%s\s*'?" % range_delimiter, part)
-#                 starts = self.match_pattern(raw_start)
-#                 assert starts
-#                 ends = self.match_pattern(raw_end)
-#                 assert ends
-#                 for start in starts:
-#                     for end in ends:
-#                         codes.update(self.fill_range(start, end))
-#             else:
-#                 matches = self.match_pattern(part)
-#                 assert matches
-#                 codes.update(matches)
-#         return codes
-# #                 
-# #                 
-# #                 if '*' in start:
-# #                     starts = wild_card_fillers[(code_type, code_system)](start)
-# #                 else:
-# #                     starts = [start]
-# #                 if '*' in end:
-# #                     ends = wild_card_fillers[(code_type, code_system)](end)
-# #                 else:
-# #                     ends = [end]
-# #                 codes.extend(list(set(starts+ends+range_fillers[(code_type, code_system)](min(starts), max(ends)))))
-# #             elif '*' in part:
-# #                 codes.extend(wild_card_fillers[(code_type, code_system)](part))
-# #             else:
-# #                 codes.append(part)
-# #         return [code_processors[(code_type, code_system)](code) for code in codes]
-#     
-#     @abstractmethod
-#     def standardize(self, code):
-#         raise NotImplementedError
-#     
-#     @abstractmethod
-#     def _fill_range(self, lower, upper):
-#         raise NotImplementedError
-#     
-#     def fill_range(self, lower, upper):
-#         return [self.standardize(code) for code in self._fill_range(self.standardize(lower), self.standardize(upper))]
-#     
-#     @abstractmethod
-#     def _match_pattern(self, pattern):
-#         raise NotImplementedError
-#     
-#     def match_pattern(self, pattern):
-#         return [self.standardize(code) for code in self._match_pattern(self.standardize(pattern))]
-#     
-# 
-#     

@@ -1,4 +1,4 @@
-from .base import left_pad, RegexVocabulary, LexiconVocabulary
+from .base import left_pad, RegexVocabulary, LexiconVocabulary, MedicationVocabulary
 from operator import add
 from toolz.curried import partial
 from itertools import product
@@ -17,7 +17,8 @@ def _read_text_file(filename):
 
 _all_ndc_codes = _read_text_file(os.path.join(resources, 'ndctext', 'package.txt'))
         
-class NDC(RegexVocabulary, LexiconVocabulary): # Diamond inheritance!
+class NDC(RegexVocabulary, LexiconVocabulary, MedicationVocabulary): # Diamond inheritance!
+    vocab_name = 'NDC'
     def __init__(self):
         RegexVocabulary.__init__(self, r'([\d\*]{1,5}\-[a-zA-Z\d\*]{1,4}\-(([\d\*]{1,2})|([a-zA-Z\*][\d\*]?)|(0[a-zA-Z\*])))|([\d\*]{4,9}[a-zA-Z\d\*]{1,2})')
         LexiconVocabulary.__init__(self, map(self.standardize, _all_ndc_codes))

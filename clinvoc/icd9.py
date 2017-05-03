@@ -1,6 +1,6 @@
 import os
 from .resources import resources
-from .base import left_pad
+from .base import left_pad, ProcedureVocabulary, DiagnosisVocabulary
 from .icd import ICDBase
 
 def _read_text_file(filename):
@@ -51,7 +51,8 @@ def _standardize_icd9_pcs(code, use_decimals=False):
 _all_icd9_cm_codes = map(_standardize_icd9_cm, _read_text_file(os.path.join(resources, 'CMS32_DESC_SHORT_DX.txt')))
 _all_icd9_pcs_codes = map(_standardize_icd9_pcs, _read_text_file(os.path.join(resources, 'CMS32_DESC_SHORT_SG.txt')))
 
-class ICD9CM(ICDBase):
+class ICD9CM(ICDBase, DiagnosisVocabulary):
+    vocab_name = 'ICD9CM'
     decimal_regex = '(%s)|(%s)|(%s)' % ('V[\d\*]{2}(\.[\d\*]{1,2})?', 
                                         'E[\d\*]{3}(\.[\d\*]{1})?', 
                                         '[\d\*]{3}(\.[\d\*]{1,2})?')
@@ -62,7 +63,8 @@ class ICD9CM(ICDBase):
     def _standardize(self, code):
         return _standardize_icd9_cm(code, self.use_decimals)
 
-class ICD9PCS(ICDBase):
+class ICD9PCS(ICDBase, ProcedureVocabulary):
+    vocab_name = 'ICD9PCS'
     decimal_regex = '[\d\*]{1,2}(\.[\d\*]{1,3})?'
     nondecimal_regex = '[\d\*]{2,5}'
     pre_lexicon = _all_icd9_pcs_codes

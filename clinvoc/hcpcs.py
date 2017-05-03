@@ -1,6 +1,6 @@
-from .base import RegexVocabulary, left_pad
+from .base import RegexVocabulary, left_pad, NoWildcardsVocabulary, NoRangeFillVocabulary, NoCheckVocabulary,\
+    ProcedureVocabulary, ModifierVocabulary
 import re
-from clinvoc.base import NoWildcardsVocabulary, NoRangeFillVocabulary
 from itertools import product
 
 _hcpcs_split_regex = re.compile('^([A-Z]*)([0-9]+)([A-Z]*)$')
@@ -14,7 +14,8 @@ def hcpcs_join(letter_part, number_part):
     digits = 5 - len(letter_part)
     return letter_part + (('%%.%dd' % digits) % int(number_part))
 
-class HCPCS(RegexVocabulary):
+class HCPCS(RegexVocabulary, NoCheckVocabulary, ProcedureVocabulary):
+    vocab_name = 'HCPCS'
     def __init__(self):
         RegexVocabulary.__init__(self, '([\*ABCDEGHJKLMPQRSTVX\d][\d\*]{3}[FMTU\d\*])|([\d\*]{1,4}[FMTU\d\*])|([\d\*]{1,5})', ignore_case=True)
         
@@ -45,7 +46,8 @@ class HCPCS(RegexVocabulary):
     def _standardize(self, code):
         return left_pad(code.strip().upper(), 5)
 
-class HCPCSModifier(RegexVocabulary, NoWildcardsVocabulary, NoRangeFillVocabulary):
+class HCPCSModifier(RegexVocabulary, NoWildcardsVocabulary, NoRangeFillVocabulary, NoCheckVocabulary, ModifierVocabulary):
+    vocab_name = 'HCPCSMOD'
     def __init__(self):
         RegexVocabulary.__init__(self, '[A-Za-z\d]{2}')
     

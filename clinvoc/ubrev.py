@@ -1,5 +1,5 @@
 import re
-from .base import RegexVocabulary, NoWildcardsVocabulary
+from .base import RegexVocabulary, NoWildcardsVocabulary, NoCheckVocabulary, RevenueSourceVocabulary
 
 _ubrev_split_regex = re.compile('([0-9]+)([A-z]*)')
 def _ubrev_split(code):
@@ -12,7 +12,8 @@ def _ubrev_join(number_part, letter_part):
     digits = 4 - len(letter_part)
     return (('%%.%dd' % digits) % int(number_part)) + letter_part
 
-class UBREV(RegexVocabulary, NoWildcardsVocabulary):
+class UBREV(RegexVocabulary, NoWildcardsVocabulary, NoCheckVocabulary, RevenueSourceVocabulary):
+    vocab_name = 'UBREV'
     def __init__(self):
         RegexVocabulary.__init__(self, '[\d]{1,2}\.?(([\d]{1,2})|([\d][A-z]))')
     

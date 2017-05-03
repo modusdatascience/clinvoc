@@ -1,8 +1,7 @@
 import os
 from .resources import resources
-from .base import RegexVocabulary
-from .icd import _expand_icd_codes, ICDBase
-from clinvoc.base import left_pad
+from .base import left_pad, ProcedureVocabulary, DiagnosisVocabulary
+from .icd import ICDBase
 
 def parse_code(code):
     code = code.upper()
@@ -46,8 +45,10 @@ class ICD10Base(ICDBase):
     def _standardize(self, code):
         return _standardize_icd10(code, self.use_decimals)
 
-class ICD10PCS(ICD10Base):
+class ICD10PCS(ICD10Base, ProcedureVocabulary):
+    vocab_name = 'ICD10PCS'
     pre_lexicon = _all_icd10_pcs_codes
   
-class ICD10CM(ICD10Base):
+class ICD10CM(ICD10Base, DiagnosisVocabulary):
+    vocab_name = 'ICD10CM'
     pre_lexicon = _all_icd10_cm_codes
