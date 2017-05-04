@@ -98,24 +98,3 @@ class CodeCollection(object):
             raise KeyError()
         return result_dict
     
-#     def set(self, *args, **kwargs):
-#         value = args[-1]
-#         reduced_args = args[:-1]
-#         key = self.level_class(*reduced_args, **kwargs)
-#         keys = self._key_match(key)
-#         if len(keys) > 1:
-#             raise KeyError()
-#         self.keys.add(key)
-#         self.dict[key] = value
-#     
-#     def add(self, *args, **kwargs):
-#         key = self.level_class(*args, **kwargs)
-#         def _add(val):
-#             keys = self._key_match(key)
-#             if isinstance(val, basestring):
-#                 for k in keys:
-#                     self.dict
-        
-        
-        
-    
