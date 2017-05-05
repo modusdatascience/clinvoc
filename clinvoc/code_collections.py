@@ -1,5 +1,5 @@
 from abc import ABCMeta, abstractmethod
-from collections import namedtuple, defaultdict
+from collections import defaultdict
 from operator import eq, or_
 from toolz.functoolz import curry, flip
 
@@ -9,73 +9,80 @@ class Selector(object):
     def __eq__(self, other):
         raise NotImplementedError
     
-class Any(Selector):
+class Star(Selector):
     def __eq__(self, other):
         return True
 
-star = Any()
+class NA(Selector):
+    def __eq__(self, other):
+        return False
 
-# def statictuple(levels, default):
-#     def create
-
-def codecoll(name, levels):
-    name_ = name
-    levels_ = levels
-    class _coll(CodeCollection):
-        name = name_
-        levels = levels_
-        levels_set = set(levels)
-        level_class = namedtuple(name, levels)
-        level_class.__new__.__defaults__ = (star,) * len(levels)
-        
-    _coll.__name__ = name
-    return _coll
-
-def _equal_on_levels(levels):
-    def _eq(tup1, tup2):
-        for level in levels:
-            if tup1[level] != tup2[level]:
-                return False
-            return True
-    return _eq
-
-def _fallback(*funcs):
-    def _func(*args, **kwargs):
-        for func in funcs:
-            try:
-                return func(*args, **kwargs)
-            except:
-                pass
-        raise ValueError()
-    return _func
-
-def _levels_kernel(levels):
-    def _ker(tup):
-        return tuple(map(_fallback(tup.__getattribute__, tup.__getitem__), levels))
-    return _ker
+star = Star()
+na = NA()
 
 class CodeCollection(object):
-    def __init__(self, *items):
-#         self.level_class = namedtuple(self.name, self.levels)
-#         self.level_class.__new__.__defaults__ = [Any()] * len(self.levels)
+    def __init__(self, *items, **kwargs):
+        assert set(kwargs.keys()) <= {'levels', 'name'}
+        self.name = kwargs.get('name', na)
         self.keys = set()
         self.dict = defaultdict(set)
+        if 'levels' in kwargs:
+            levels = tuple(kwargs['levels'])
+            key_size = len(levels)
+        else:
+            levels = None
+            key_size = None
         for k, v in items:
-            key = self.level_class(*k)
+            if key_size is None:
+                key_size = len(k)
+            elif key_size != len(k):
+                raise KeyError('All keys must have the same number of levels.')
+            key = tuple(k)
             if not self._is_concrete_key(key):
                 raise KeyError()
             else:
                 self.dict[key] = v
                 self.keys.add(key)
-            
+        if levels is None:
+            levels = (na,) * key_size
+        self.levels = levels
+        self.key_size = key_size
+        self.level_index = dict(zip(levels, range(self.key_size)))
+    
+    def _levels_to_indices(self, levels):
+        return [level if isinstance(level, int) else self.level_index[level] for level in levels]
+    
+    def _levels_kernel(self, levels):
+        indices = self._levels_to_indices(levels)
+        def _ker(tup):
+            return tuple(map(tup.__getitem__, indices))
+        return _ker
+        
+    def _process_key_args(self, *args, **kwargs):
+        result = [star] * self.key_size
+        used = set()
+        for i, arg in enumerate(args):
+            result[i] = arg
+            used.add(i)
+        
+        for k, v in kwargs.items():
+            i = self.level_index[k]
+            if i in used:
+                raise KeyError('Key %s appears more than once.' % k)
+            else:
+                result[i] = v
+                used.add(i)
+        
+        return tuple(result)
+    
     def _is_concrete_key(self, key):
-        return isinstance(key, self.level_class) and all(map(flip(isinstance)(basestring), key))
+        return isinstance(key, tuple) and all(map(flip(isinstance)(basestring), key))
 
     def _key_match(self, key):
         return filter(curry(eq)(key), self.keys)
     
     def get(self, *args, **kwargs):
-        key = self.level_class(*args, **kwargs)
+        key = self._process_key_args(*args, **kwargs)
         keys = self._key_match(key)
         if not keys:
             raise KeyError()
@@ -87,14 +94,13 @@ class CodeCollection(object):
     def collectlevels(self, *levels):
         if not levels:
             levels = self.levels
-        ker = _levels_kernel(levels)
+        ker = self._levels_kernel(levels)
         result_dict = dict()
         for k, v in self.dict.items():
             kernel = ker(k)
             if kernel not in result_dict:
                 result_dict[kernel] = set()
             result_dict[kernel].update(v)
-        if not set(levels) <= self.levels_set:
-            raise KeyError()
         return result_dict
     
+        
