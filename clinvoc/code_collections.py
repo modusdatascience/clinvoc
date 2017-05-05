@@ -2,6 +2,7 @@ from abc import ABCMeta, abstractmethod
 from collections import defaultdict
 from operator import eq, or_
 from toolz.functoolz import curry, flip
+from itertools import chain
 
 class Selector(object):
     __metaclass__ = ABCMeta
@@ -17,8 +18,14 @@ class NA(Selector):
     def __eq__(self, other):
         return False
 
+class Ind(Selector):
+    def __eq__(self, other):
+        return self is other
+
 star = Star()
 na = NA()
+ind = Ind()
+
 
 class CodeCollection(object):
     def __init__(self, *items, **kwargs):
@@ -38,16 +45,16 @@ class CodeCollection(object):
             elif key_size != len(k):
                 raise KeyError('All keys must have the same number of levels.')
             key = tuple(k)
-            if not self._is_concrete_key(key):
-                raise KeyError()
-            else:
-                self.dict[key] = v
-                self.keys.add(key)
+            self.dict[key] = v
+            self.keys.add(key)
         if levels is None:
-            levels = (na,) * key_size
+            levels = [Ind() for _ in range(key_size)]
         self.levels = levels
         self.key_size = key_size
         self.level_index = dict(zip(levels, range(self.key_size)))
+    
+    def __len__(self):
+        return len(self.dict)
     
     def _levels_to_indices(self, levels):
         return [level if isinstance(level, int) else self.level_index[level] for level in levels]
@@ -103,4 +110,40 @@ class CodeCollection(object):
             result_dict[kernel].update(v)
         return result_dict
     
+    def _unionize(self, size, pieces, offsets=None, filler=None):
+        if offsets is None:
+            offsets = [0] * len(pieces)
+        if filler is None:
+            filler = lambda i,j: ind
+        items = defaultdict(set)
+        for i, k, v in chain(*map(lambda (i_, d): [(i_, k_, v_) for k_, v_ in d.dict.items()], enumerate(pieces))):
+            k_size = len(k)
+            key = tuple([filler(i,j) for j in range(offsets[i])]) + k + tuple([filler(i,j) for j in range(offsets[i] + k_size, size)])
+            items[key].update(v)
+        return items.items()
+    
+    def union(self, *others, **kwargs):
+        pieces = (self,) + others
+        union_size = max(map(flip(getattr)('key_size'), pieces))
+        items = self._unionize(union_size, pieces)
+        return self.__class__(*items, **kwargs)
+    
+    def disjoint_union(self, *others, **kwargs):
+        assert set(kwargs.keys()) <= {'levels', 'name', 'names'}
+        pieces = (self,) + others
+        union_size = max(map(flip(getattr)('key_size'), pieces)) + 1
+        offsets = [1] * len(pieces)
+        if 'names' in kwargs:
+            names = kwargs['names']
+            del kwargs['name']
+        else:
+            names = [piece.name for piece in pieces]
+        def filler(i, j):
+            return names[i] if j == 0 else ind
+        items = self._unionize(union_size, pieces, offsets, filler)
+        return self.__class__(*items, **kwargs)
+    
+    
+        
+            
         
