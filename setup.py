@@ -6,7 +6,7 @@ setup(name='clinvoc',
       author='Jason Rudy',
       author_email='jcrudy@gmail.com',
       url='https://github.com/jcrudy/clinvoc',
-      package_data={'clinvoc': ['resources/*']},
+      package_data={'clinvoc': ['resources/**']},
       packages=find_packages(),
       requires=[]
      )
