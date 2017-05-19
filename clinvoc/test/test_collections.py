@@ -106,7 +106,45 @@ def test_disjoint_union():
                                          ('coll2','2', 'a', '2'): {'9','10'},
                                          ('coll2','2', 'b', '1'): {'11','12'},
                                          ('coll2','2', 'b', '2'): {'11','13'}})
-    
+
+def test_unequal_levels():
+    '''
+    Test using None to fill in unused levels.
+    '''
+    coll = CodeCollection((('1', 'a', '1'), {'1','2'}),
+                          (('1', 'a', '2'), {'6'}),
+                          (('1', 'b', None), {'3','4'}),
+                          (('2', 'a', None), {'1','4'}),
+                          (('2', 'b', None), {'5','2'}),
+                          name='coll',
+                          levels=['level1', 'level2', 'level3'])
+    assert_equal(coll['1'], {'1', '2', '3', '4', '6'})
+    assert_equal(coll['1', star], {'1', '2', '3', '4', '6'})
+    assert_equal(coll[star, 'a'], {'1', '2', '4', '6'})
+    assert_equal(coll.get(level2='a'), {'1', '2', '4', '6'})
+    assert_equal(coll.get('1', level2='a'), {'1', '2', '6'})
+    assert_equal(coll.collectlevels('level1'), {('1',): {'1', '2', '3', '4', '6'},
+                                                ('2',): {'1', '2', '4' ,'5'}})
+    assert_equal(coll.collectlevels('level2'), {('a',): {'1', '2', '4', '6'},
+                                                ('b',): {'2', '3', '4' ,'5'}})
+    assert_equal(coll.collectlevels('level3'), {('1',): {'1', '2'},
+                                                ('2',): {'6'},
+                                                (None,): {'1', '2', '3', '4', '5'},
+                                                })
+    assert_equal(coll.collectlevels(0), {('1',): {'1', '2', '3', '4', '6'},
+                                         ('2',): {'1', '2', '4' ,'5'}})
+    assert_equal(coll.collectlevels(1), {('a',): {'1', '2', '4', '6'},
+                                         ('b',): {'2', '3', '4' ,'5'}})
+    assert_equal(coll.collectlevels(2), {('1',): {'1', '2'},
+                                         ('2',): {'6'},
+                                         (None,): {'1', '2', '3', '4', '5'},
+                                         })
+    assert_equal(coll.collectlevels(), {('1', 'a', '1'): {'1','2'}, 
+                                        ('1', 'a', '2'): {'6'},
+                                        ('1', 'b', None): {'3','4'},
+                                        ('2', 'a', None): {'1','4'},
+                                        ('2', 'b', None): {'5','2'}})
+
 if __name__ == '__main__':
     import sys
     import nose
