@@ -17,5 +17,6 @@ setup(name='clinvoc',
       url='https://github.com/jcrudy/clinvoc',
       package_data={'clinvoc': package_files(os.path.join('clinvoc', 'resources'))},
       packages=find_packages(),
-      requires=[]
+      requires=[],
+      install_requires=['toolz', 'pyparsing'],
      )
