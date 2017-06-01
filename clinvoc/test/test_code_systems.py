@@ -7,6 +7,10 @@ from clinvoc.hcpcs import HCPCS, HCPCSModifier
 from clinvoc.ndc import NDC
 from clinvoc.loinc import LOINC
 
+def test_icd10_cm_no_decimals():
+    vocab = ICD10CM(use_decimals=False, match_terminal_only=True)
+    assert_equal(vocab.standardize('A150'), 'A15.0')
+
 def test_icd10_cm():
     vocab = ICD10CM(match_terminal_only=True)
     assert_equal(vocab.parse('‘Z00.00’, ‘Z00.01’, ‘Z00.121’, ‘Z00.129’, ‘Z00.8’'), 
