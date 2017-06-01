@@ -103,6 +103,24 @@ class Vocabulary(object):
         '''
         raise NotImplementedError
     
+    def safe_standardize(self, code):
+        '''
+        If standardization fails, return the code unchanged.
+        '''
+        try:
+            return self.standardize(code)
+        except:
+            return code
+    
+    def safer_standardize(self, code):
+        '''
+        If standardize fails, return None.
+        '''
+        try:
+            return self.standardize(code)
+        except:
+            return None
+    
     @abstractmethod
     def _fill_range(self, lower, upper):
         raise NotImplementedError
