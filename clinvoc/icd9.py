@@ -55,7 +55,7 @@ class ICD9CM(ICDBase, DiagnosisVocabulary):
     vocab_name = 'ICD9CM'
     decimal_regex = '(%s)|(%s)|(%s)' % ('V[\d\*]{2}(\.[\d\*]{1,2})?', 
                                         'E[\d\*]{3}(\.[\d\*]{1})?', 
-                                        '[\d\*]{3}(\.[\d\*]{1,2})?')
+                                        '[\d\*]{1,3}(\.[\d\*]{1,2})?')
     nondecimal_regex = '(%s)|(%s)|(%s)' % ('V[\d\*]{2,4}', 
                                            'E[\d\*]{3,4}', 
                                            '[\d\*]{3,5}')
