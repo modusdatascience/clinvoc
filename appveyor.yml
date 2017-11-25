@@ -1,0 +1,64 @@
+# AppVeyor.com is a Continuous Integration service to build and run tests under
+# Windows
+environment:
+
+  CMD_IN_ENV: "cmd /E:ON /V:ON /C .\\build_tools\\appveyor\\run_with_env.cmd"
+  
+  priv_key:
+    secure: <encryped-value>
+    
+  matrix:
+
+    - PYTHON: "C:\\Python27-x64"
+      PYTHON_VERSION: "2.7.8"
+      PYTHON_ARCH: "64"
+      MINICONDA: "C:\\Miniconda-x64"
+
+install:
+  - ps: $fileContent = "-----BEGIN RSA PRIVATE KEY-----`n"
+  - ps: $fileContent += $env:priv_key.Replace(' ', "`n")
+  - ps: $fileContent += "`n-----END RSA PRIVATE KEY-----`n"
+  - ps: Set-Content c:\users\appveyor\.ssh\id_rsa $fileContent
+
+  # Miniconda is pre-installed in the worker build
+  - "SET PATH=%MINICONDA%;%MINICONDA%\\Scripts;%PATH%"
+  - "python -m pip install -U pip"
+  # Check that we have the expected version and architecture for Python
+  - "python --version"
+  - "python -c \"import struct; print(struct.calcsize('P') * 8)\""
+  - "pip --version"
+
+  # Remove cygwin because it clashes with conda
+  # see http://help.appveyor.com/discussions/problems/3712-git-remote-https-seems-to-be-broken
+  - "rmdir C:\\cygwin /s /q"
+
+  # Install the build and runtime dependencies of the project.
+  - "conda install -y conda-env"
+  - "conda env create"
+  - "activate clinvocdev"
+  - "python setup.py bdist_wheel"
+  - ps: "ls"
+  - ps: "ls dist"
+  
+  # Remove the build environment
+  - "activate root"
+  - "conda env remove -n clinvocdev -y"
+  
+
+# Not a .NET project, we build everything in the install step instead
+build: false
+
+test_script:
+  - "conda env create"
+  - "activate clinvocdev"
+  - ps: "ls"
+  - ps: "ls dist"
+  - "pip install clinvoc --no-index --find-link dist"
+  - "mkdir empty"
+  - "cd empty"
+  - "nosetests -s -v clinvoc"
+  - "cd .."
+
+artifacts:
+  # Archive the generated wheel package in the ci.appveyor.com build report.
+  - path: dist/*.whl
