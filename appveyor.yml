@@ -35,14 +35,14 @@ install:
   # Install the build and runtime dependencies of the project.
   - "conda install -y conda-env"
   - "conda env create"
-  - "activate cydatemapdev"
+  - "activate clinvocdev"
   - "python setup.py bdist_wheel"
   - ps: "ls"
   - ps: "ls dist"
   
   # Remove the build environment
   - "activate root"
-  - "conda env remove -n cydatemapdev -y"
+  - "conda env remove -n clinvocdev -y"
   
 
 # Not a .NET project, we build everything in the install step instead
@@ -50,13 +50,13 @@ build: false
 
 test_script:
   - "conda env create"
-  - "activate cydatemapdev"
+  - "activate clinvocdev"
   - ps: "ls"
   - ps: "ls dist"
-  - "pip install cydatemap --no-index --find-link dist"
+  - "pip install clinvoc --no-index --find-link dist"
   - "mkdir empty"
   - "cd empty"
-  - "nosetests -s -v cydatemap"
+  - "nosetests -s -v clinvoc"
   - "cd .."
 
 artifacts:
