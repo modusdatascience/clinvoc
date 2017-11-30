@@ -15,7 +15,7 @@ def parse_code(code):
 
 def _read_text_file(filename):
     result = []
-    with open(filename, 'rb') as infile:
+    with open(filename, 'rt') as infile:
         for line in infile:
             result.append(line[:7])
     return result
@@ -34,8 +34,8 @@ def _standardize_icd10(code, use_decimals=False):
             result += '.' + code_[3:]
     return result
     
-_all_icd10_pcs_codes = map(_standardize_icd10, _read_text_file(os.path.join(resources, 'icd10pcs_codes_2016.txt')))
-_all_icd10_cm_codes = map(_standardize_icd10, _read_text_file(os.path.join(resources, 'icd10cm_codes_2016.txt')))
+_all_icd10_pcs_codes = list(map(_standardize_icd10, _read_text_file(os.path.join(resources, 'icd10pcs_codes_2016.txt'))))
+_all_icd10_cm_codes = list(map(_standardize_icd10, _read_text_file(os.path.join(resources, 'icd10cm_codes_2016.txt'))))
 
 class ICD10Base(ICDBase):
     decimal_regex = '([A-TV-Z0-9\*]?[A-Z0-9\*])?[A-Z0-9\*](\.[A-Z0-9\*]{1,4})?'

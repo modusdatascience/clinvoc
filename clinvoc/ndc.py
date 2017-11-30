@@ -5,11 +5,13 @@ from itertools import product
 import os
 from clinvoc.resources import resources
 import csv
+from six.moves import reduce
+from six import next
 
 def _read_text_file(filename):
-    with open(filename, 'rb') as infile:
+    with open(filename, 'rt') as infile:
         reader = csv.reader(infile, delimiter='\t')
-        reader.next()
+        next(reader)
         _all_ndc_codes = []
         for row in reader:
             _all_ndc_codes.append(row[2])

@@ -3,12 +3,14 @@ from .base import RegexVocabulary, LexicographicPatternMatchVocabulary, Lexicogr
     LexicographicVocabulary, left_pad, ObservationVocabulary
 import os
 from .resources import resources
+from six import next
+import io
 
 def _read_text_file(filename):
     codes = []
-    with open(filename, 'rb') as infile:
+    with io.open(filename, mode='rt', encoding='utf-8') as infile:
         reader = csv.reader(infile, delimiter=',', quoting=csv.QUOTE_ALL)
-        reader.next()
+        next(reader)
         for line in reader:
             codes.append(line[0])
     return codes

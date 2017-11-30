@@ -3,6 +3,7 @@ from collections import defaultdict
 from operator import eq, or_
 from toolz.functoolz import curry, flip
 from itertools import chain
+from six.moves import reduce
 
 class Selector(object):
     __metaclass__ = ABCMeta
@@ -19,6 +20,9 @@ class NA(Selector):
         return False
 
 class Ind(Selector):
+    def __hash__(self):
+        return id(self)
+
     def __eq__(self, other):
         return self is other
 
@@ -116,7 +120,7 @@ class CodeCollection(object):
         if filler is None:
             filler = lambda i,j: ind
         items = defaultdict(set)
-        for i, k, v in chain(*map(lambda (i_, d): [(i_, k_, v_) for k_, v_ in d.dict.items()], enumerate(pieces))):
+        for i, k, v in chain(*map(lambda tup: [(tup[0], k_, v_) for k_, v_ in tup[1].dict.items()], enumerate(pieces))):
             k_size = len(k)
             key = tuple([filler(i,j) for j in range(offsets[i])]) + k + tuple([filler(i,j) for j in range(offsets[i] + k_size, size)])
             items[key].update(v)

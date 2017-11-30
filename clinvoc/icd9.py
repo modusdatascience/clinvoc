@@ -5,7 +5,7 @@ from .icd import ICDBase
 
 def _read_text_file(filename):
     result = []
-    with open(filename, 'rb') as infile:
+    with open(filename, 'rt') as infile:
         for line in infile:
             result.append(line[:5])
     return result

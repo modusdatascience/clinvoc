@@ -9,6 +9,8 @@ from pyparsing import Regex, NoMatch, Literal, White, ZeroOrMore, StringEnd,\
 from operator import xor, or_
 from itertools import product, chain, starmap
 from . import __version__, __clean__
+from six.moves import reduce
+from six import string_types
 
 def left_pad(code, expected_length, padding='0'):
     n = len(code)
@@ -239,7 +241,7 @@ class RevenueSourceVocabulary(Vocabulary):
 @memoize
 def create_parser(regexes, pattern_matchers, range_fillers, quote_pairs=[('\'','\''), ('"','"')], delimiters=[','], 
                   require_quotes=False, require_delimiter=False, allow_empty=True):
-    if isinstance(regexes, basestring) or isinstance(regexes, re._pattern_type):
+    if isinstance(regexes, string_types) or isinstance(regexes, re._pattern_type):
         regexes = [regexes]
         pattern_matchers = [pattern_matchers]
         range_fillers = [range_fillers]
