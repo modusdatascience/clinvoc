@@ -48,8 +48,8 @@ def _standardize_icd9_pcs(code, use_decimals=False):
             result += '.' + code_[2:]
     return result
 
-_all_icd9_cm_codes = map(_standardize_icd9_cm, _read_text_file(os.path.join(resources, 'CMS32_DESC_SHORT_DX.txt')))
-_all_icd9_pcs_codes = map(_standardize_icd9_pcs, _read_text_file(os.path.join(resources, 'CMS32_DESC_SHORT_SG.txt')))
+_all_icd9_cm_codes = list(map(_standardize_icd9_cm, _read_text_file(os.path.join(resources, 'CMS32_DESC_SHORT_DX.txt'))))
+_all_icd9_pcs_codes = list(map(_standardize_icd9_pcs, _read_text_file(os.path.join(resources, 'CMS32_DESC_SHORT_SG.txt'))))
 
 class ICD9CM(ICDBase, DiagnosisVocabulary):
     vocab_name = 'ICD9CM'
