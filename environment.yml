@@ -2,6 +2,7 @@ name: clinvocdev
 dependencies:
     - python=3.6.2
     - nose
+    - unicodecsv
     - pip:
         - six
         - pyparsing==2.2.0

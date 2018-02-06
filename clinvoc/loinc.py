@@ -8,10 +8,16 @@ import io
 
 def _read_text_file(filename):
     codes = []
-    with io.open(filename, mode='rt', encoding='utf-8') as infile:
+    with io.open(filename, mode='rb') as infile:
         reader = csv.reader(infile, delimiter=',', quoting=csv.QUOTE_ALL)
         next(reader)
-        for line in reader:
+        while True:
+            try:
+                line = next(reader)
+            except StopIteration:
+                break
+            except:
+                raise
             codes.append(line[0])
     return codes
 
