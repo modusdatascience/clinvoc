@@ -1,4 +1,4 @@
-import csv
+import unicodecsv as csv
 from .base import RegexVocabulary, LexicographicPatternMatchVocabulary, LexicographicRangeFillVocabulary, \
     LexicographicVocabulary, left_pad, ObservationVocabulary
 import os
@@ -9,7 +9,7 @@ import io
 def _read_text_file(filename):
     codes = []
     with io.open(filename, mode='rb') as infile:
-        reader = csv.reader(infile, delimiter=',', quoting=csv.QUOTE_ALL)
+        reader = csv.reader(infile, delimiter=',', quoting=csv.QUOTE_ALL, encoding='utf-8-sig')
         next(reader)
         while True:
             try:
