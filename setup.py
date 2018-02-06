@@ -18,5 +18,5 @@ setup(name='clinvoc',
       package_data={'clinvoc': package_files(os.path.join('clinvoc', 'resources'))},
       packages=find_packages(),
       requires=[],
-      install_requires=['toolz', 'pyparsing', 'six'],
+      install_requires=['toolz', 'pyparsing', 'six', 'multipledispatch'],
      )

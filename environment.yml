@@ -7,3 +7,4 @@ dependencies:
         - six
         - pyparsing==2.2.0
         - toolz==0.8.2
+        - multipledispatch
