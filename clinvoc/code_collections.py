@@ -97,7 +97,7 @@ class CodeCollection(object):
         keys = self._key_match(key)
         if not keys:
             raise KeyError()
-        return reduce(or_, map(self.dict.get, keys))
+        return reduce(or_, map(self.dict.get, keys), set())
     
     def __getitem__(self, key):
         return self.get(*key)
