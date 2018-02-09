@@ -145,6 +145,20 @@ def test_unequal_levels():
                                         ('2', 'a', None): {'1','4'},
                                         ('2', 'b', None): {'5','2'}})
 
+def test_select():
+    coll = CodeCollection((('1', 'a'), {'1','2'}), 
+                          (('1', 'b'), {'3','4'}),
+                          (('2', 'a'), {'1','4'}),
+                          (('2', 'b'), {'5','2'}),
+                          name='coll',
+                          levels=['level1', 'level2'])
+    
+    colla = CodeCollection((('1', 'a'), {'1','2'}), 
+                          (('2', 'a'), {'1','4'}),
+                          name='coll',
+                          levels=['level1', 'level2'])
+    assert_equal(coll.select(level2='a'), colla)
+
 if __name__ == '__main__':
     import sys
     import nose

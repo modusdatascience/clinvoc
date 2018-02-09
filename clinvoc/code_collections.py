@@ -4,6 +4,10 @@ from operator import eq, or_
 from toolz.functoolz import curry, flip
 from itertools import chain
 from six.moves import reduce
+from six import string_types
+from terminaltables.ascii_table import AsciiTable
+from clinvoc.utilities import flatten, tupify
+from toolz.curried import keymap, valmap
 
 class Selector(object):
     __metaclass__ = ABCMeta
@@ -57,6 +61,22 @@ class CodeCollection(object):
         self.key_size = key_size
         self.level_index = dict(zip(levels, range(self.key_size)))
     
+    def to_ascii_table(self):
+        table_data = tuple(map(flatten(1), sorted(valmap(', '.join, keymap(flatten(float('inf')), self.dict)).items())))
+        header = [[x if isinstance(x, string_types) else '' for x in self.levels] + ['',],]
+        table = AsciiTable(header + list(map(list, table_data)), 'Collection: %s' % self.name)
+        return table
+        
+    def __eq__(self, other):
+        if not isinstance(other, CodeCollection):
+            return NotImplemented
+        return ((self.name == other.name) and 
+                (self.keys == other.keys) and
+                (self.dict == other.dict) and
+                (self.levels == other.levels) and
+                (self.key_size == other.key_size) and 
+                (self.level_index == other.level_index))
+    
     def __len__(self):
         return len(self.dict)
     
@@ -87,7 +107,7 @@ class CodeCollection(object):
         return tuple(result)
     
     def _is_concrete_key(self, key):
-        return isinstance(key, tuple) and all(map(flip(isinstance)(basestring), key))
+        return isinstance(key, tuple) and all(map(flip(isinstance)(string_types), key))
 
     def _key_match(self, key):
         return filter(curry(eq)(key), self.keys)
@@ -101,6 +121,11 @@ class CodeCollection(object):
     
     def __getitem__(self, key):
         return self.get(*key)
+    
+    def select(self, *args, **kwargs):
+        key = self._process_key_args(*args, **kwargs)
+        keys = list(self._key_match(key))
+        return CodeCollection(*zip(keys, map(self.dict.get, keys)), name=self.name, levels=self.levels)
     
     def collectlevels(self, *levels):
         if not levels:

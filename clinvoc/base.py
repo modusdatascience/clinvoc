@@ -11,6 +11,7 @@ from itertools import product, chain, starmap
 from . import __version__, __clean__
 from six.moves import reduce
 from six import string_types
+import random
 
 def left_pad(code, expected_length, padding='0'):
     n = len(code)
@@ -370,12 +371,16 @@ class RegexUnionVocabulary(RegexVocabularyBase, NoWildcardsVocabulary, NoRangeFi
 class LexiconVocabulary(Vocabulary):
     def __init__(self, lexicon):
         self.lexicon_set = set(lexicon)
+        self.lexicon_list = list(lexicon)
         
     def check(self, code):
         try:
             return self.standardize(code) in self.lexicon_set
         except AssertionError:
             return False
+        
+    def random(self):
+        return random.choice(self.lexicon_list)
 
 class LexicographicVocabulary(LexiconVocabulary):
     def __init__(self, lexicon):
