@@ -6,4 +6,4 @@ codestring = '745.0-745.3, 745.6*, 746, 747.1-747.49, 747.81, 747.89, 35.8, 35.8
 # Use clinvoc to parse and standardize the above codes
 vocab = ICD9CM()
 codeset = vocab.parse(codestring)
-print(codeset)
+print(sorted(codeset))
