@@ -1,8 +1,10 @@
 # clinvoc
 
-The clinvoc package makes it easier to parse and standardize clinical vocabularies in Python. clinvoc can expand ranges and wildcard characters (i.e. '745.0-745.3' or '745.6*') into correct sets of codes. 
+The clinvoc package gives you tools for working with clinical vocabularies in Python. 
+- parse and standardize clinical vocabularies
+- expand ranges and wildcard characters (i.e. '745.0-745.3' or '745.6*') into correct sets of codes 
 
-It supports the following code systems: 
+Currently, clinvoc supports the following code systems: 
 - ICD9
 - ICD10
 - HCPCS
