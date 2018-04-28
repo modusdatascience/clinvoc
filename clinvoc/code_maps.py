@@ -1,6 +1,5 @@
 from clinvoc.code_systems import code_system_standardizers
 
-
 class CodeMap(object):
     def __init__(self, code_sets, code_system_level=-1, standardizers=None, **kwargs):
         self.code_sets = code_sets

@@ -1,13 +1,17 @@
 from abc import ABCMeta, abstractmethod
 from collections import defaultdict
 from operator import eq, or_
-from toolz.functoolz import curry, flip
+from toolz.functoolz import curry, flip, complement
 from itertools import chain
 from six.moves import reduce
-from six import string_types
+from six import string_types, next
 from terminaltables.ascii_table import AsciiTable
 from clinvoc.utilities import flatten, tupify
 from toolz.curried import keymap, valmap
+import csv
+from functools import partial
+from toolz.dicttoolz import merge
+from pyparsing import ParseException
 
 class Selector(object):
     __metaclass__ = ABCMeta
@@ -60,6 +64,94 @@ class CodeCollection(object):
         self.levels = levels
         self.key_size = key_size
         self.level_index = dict(zip(levels, range(self.key_size)))
+    
+    @classmethod
+    def from_csv(cls, path_or_file, vocabs, vocab_level='vocab', name=None, header=True, ignore=[], **csv_kwargs):
+        '''
+        Construct CodeCollection(s) from a CSV file.
+        
+        path_or_file : string or file-like
+            Either the path to a CSV file or a file-like object (such as a file or StringIO).
+            
+        vocabs : dict
+            A dict in which the keys are either strings (if a header is available) or column numbers
+            and the values are Vocabulary objects.  All cells in the specified fields will be parsed 
+            by the specified vocabularies.  The number of code collections returned will be equal to 
+            the number of key-value pairs in vocabs.
+        
+        header : bool or list
+            If True, use the first row of the csv as a header.  If False, no header will be used.  If a 
+            list, the elements of the list will be used as a header and must match the number of columns 
+            in the CSV file.
+        
+        ignore : list
+            A list of strings (if a header is available) or column numbers specifying fields in the CSV 
+            that should be ignored.
+            
+        
+        csv_kwargs : dict
+            Arguments to pass to csv.reader.
+        
+        Returns
+        -------
+        
+        
+        dict
+            The keys are the same those of vocabs and the values are CodeCollection objects.
+        
+        '''
+        # Open file if path provided
+        if isinstance(path_or_file, string_types):
+            infile = open(path_or_file, 'r')
+        else:
+            infile = path_or_file
+        
+        # Figure out header
+        reader = csv.reader(infile, **csv_kwargs)
+        if header == True:
+            header = next(reader)
+        else:
+            header = header
+        header_map = None
+        first = True
+        
+        # Parse the file
+        results = list()
+        for i, row in enumerate(reader):
+            if header == False:
+                header = list(range(len(row)))
+            if header_map is None:
+                header_map = dict(zip(header, list(range(len(row)))))
+                header_map = merge(
+                                   dict(zip(list(range(len(row))), list(range(len(row))))),
+                                   header_map
+                                   )
+            if first:
+                if len(header) != len(row):
+                    raise ValueError('Header length does not match row length!')
+                ignore_cols = sorted(map(header_map.__getitem__, ignore))
+                vocab_keys = list(vocabs.keys())
+                vocab_map = dict(zip(vocab_keys, map(header_map.__getitem__, vocab_keys)))
+                level_cols = tuple(filter(complement((set(vocab_map.values()) | set(ignore_cols)).__contains__), 
+                                             range(len(header))))
+                levels = tuple(map(header.__getitem__, level_cols)) + (vocab_level,)
+                first = False
+            keys = tuple(map(row.__getitem__, level_cols))
+            for vocab_key, vocab  in vocabs.items():
+                to_parse = row[vocab_map[vocab_key]]
+                if not to_parse.strip():
+                    results.append((keys + (vocab_key,), set()))
+                else:
+                    try:
+                        results.append((keys + (vocab_key,), vocab.parse(to_parse)))
+                    except ParseException:
+                        raise ValueError('Unable to parse field %s of row %d: "%s"' % 
+                                         (str(vocab_key), i, str(to_parse)))
+        
+        # Instantiate the CodeCollection objects
+        return cls(*results, levels=levels, name=name)
+        
+        
     
     def to_ascii_table(self):
         table_data = tuple(map(flatten(1), sorted(valmap(', '.join, keymap(flatten(float('inf')), self.dict)).items())))

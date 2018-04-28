@@ -23,6 +23,11 @@ class ICDBase(RegexVocabulary, LexicographicPatternMatchVocabulary, Lexicographi
         there are no codes under it in the hierarchy.  Standardized codes will always have decimals and leading
         zeros.
         
+        
+        Parameters
+        ----------
+        
+        
         treat_nonterminal_as_pattern : bool
             Some people will leave use non-terminal codes to mean any code under this code in the hierarchy. To
             follow this convention, set treat_nonterminal_as_pattern=True.
@@ -41,6 +46,7 @@ class ICDBase(RegexVocabulary, LexicographicPatternMatchVocabulary, Lexicographi
             Use leading zeros instead of decimal notation.  Only one of use_decimals and use_leading_zeros can be True.
             If either use_decimals or use_leading_zeros is None, it will be set to the opposite of the other.  If both
             are None, use_decimals will prevail.
+        
             
         '''
         self.treat_nonterminal_as_pattern = treat_nonterminal_as_pattern
