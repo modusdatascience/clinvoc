@@ -1,10 +1,7 @@
-from clinvoc.icd9 import ICD9CM, ICD9PCS
-from clinvoc.icd10 import ICD10CM, ICD10PCS
-from nose.tools import assert_equals, assert_equal
-from ccs.ccs import code_sets
-import csv
-from ccs.icd9 import icd9cm_vocab
-from ccs.icd10 import icd10cm_vocab
+from nose.tools import assert_equal
+from clinvoc.vocabularies.ccs.ccs import code_sets
+from clinvoc.vocabularies.ccs.icd9 import icd9cm_vocab
+from clinvoc.vocabularies.ccs.icd10 import icd10cm_vocab
 
 def test_code_sets():
     test_set_icd9 = code_sets['Infectious and parasitic diseases', 'Bacterial infection', 'Tuberculosis', 'DX', 'ICD9CM']
