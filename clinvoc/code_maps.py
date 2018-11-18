@@ -29,6 +29,8 @@ class CodeMap(object):
             return self.index[code_system][self.standardizers[code_system](code)]
         except KeyError:
             return set()
+        except ValueError:
+            raise
     
     
         
