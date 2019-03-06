@@ -3,6 +3,7 @@ dependencies:
     - python=3.6.2
     - nose
     - unicodecsv
+    - pandas
     - pip:
         - six
         - pyparsing==2.2.0
