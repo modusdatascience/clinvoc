@@ -33,7 +33,7 @@ install:
   - "rmdir C:\\cygwin /s /q"
 
   # Install the build and runtime dependencies of the project.
-  - "conda install -y conda-env"
+  # - "conda install -y conda-env"
   - "conda env create"
   - "activate clinvocdev"
   - "python setup.py bdist_wheel"
