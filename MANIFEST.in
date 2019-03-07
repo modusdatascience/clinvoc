@@ -1,2 +1,6 @@
 include versioneer.py
 include clinvoc/_version.py
+include clinvoc/resources/*
+include clinvoc/resources/LOINC_2_59_Text/*
+include clinvoc/resources/ndctext/*
+include clinvoc/vocabularies/ccs/resources/*

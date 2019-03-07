@@ -21,7 +21,7 @@ def _read_text_file(filename):
             codes.append(line[0])
     return codes
 
-_all_loinc_codes = _read_text_file(os.path.join(resources, 'LOINC_2.59_Text', 'loinc.csv'))
+_all_loinc_codes = _read_text_file(os.path.join(resources, 'LOINC_2_59_Text', 'loinc.csv'))
 class LOINC(RegexVocabulary, LexicographicPatternMatchVocabulary, LexicographicRangeFillVocabulary, ObservationVocabulary):
     vocab_name = 'LOINC'
     def __init__(self):
